@@ -1,8 +1,20 @@
 <positions>
-    <element name="MyCircleRadius">
+    <element name="Color b">
+        <x>0.000000000</x>
+        <y>208.000000000</y>
+        <width>1280.000000000</width>
+        <height>0.000000000</height>
+    </element>
+    <element name="Color g">
+        <x>0.000000000</x>
+        <y>144.000000000</y>
+        <width>1280.000000000</width>
+        <height>40.000000000</height>
+    </element>
+    <element name="Color r">
         <x>0.000000000</x>
         <y>52.000000000</y>
         <width>1280.000000000</width>
-        <height>152.000000000</height>
+        <height>68.000000000</height>
     </element>
 </positions>
