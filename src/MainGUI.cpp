@@ -8,8 +8,6 @@
 
 #include "MainGUI.h"
 
-
-
 MainGUI::MainGUI()
 {
   
@@ -18,24 +16,25 @@ MainGUI::MainGUI()
 void MainGUI::init()
 {
   guiVisible = false;
-  initSVGs();
   initGeneralGUI();
   initGraphicGUI();
   initEffecGUI();
   initMovementGUI();
   initShaderGUI();
   initTimeline();
-  sender.setup( "127.0.0.1",PORT);
-  path = new ofPath();
-  path->setFilled(false);
-  path->newSubPath();
-  path->setStrokeWidth(1);
   initEvents();
+  initOSC();
+}
+
+void MainGUI::initOSC()
+{
+  sender.setup( "127.0.0.1",PORT);
 }
 
 void MainGUI::draw()
 {
-  path->draw(0, 0);
+  ofSetColor(255);
+  drawPoints();
   if(guiVisible)
   {
     ofPushStyle();
@@ -51,86 +50,34 @@ void MainGUI::draw()
   }
 }
 
-void MainGUI::initSVGs()
+void MainGUI::drawPoints()
 {
-  svgUrl.push_back("svg/1.svg");
-  svgUrl.push_back("svg/2.svg");
-  svgUrl.push_back("svg/3.svg");
-  svgUrl.push_back("svg/4.svg");
-  svgUrl.push_back("svg/5.svg");
-  svgUrl.push_back("svg/6.svg");
-  svgUrl.push_back("svg/7.svg");
-  svgUrl.push_back("svg/8.svg");
-  svgUrl.push_back("svg/9.svg");
-  svgUrl.push_back("svg/10.svg");
-  svgUrl.push_back("svg/11.svg");
-  svgUrl.push_back("svg/12.svg");
-  svgUrl.push_back("svg/13.svg");
-  svgUrl.push_back("svg/14.svg");
-  svgUrl.push_back("svg/15.svg");
-  svgUrl.push_back("svg/16.svg");
-  svgUrl.push_back("svg/17.svg");
-  svgUrl.push_back("svg/18.svg");
-  svgUrl.push_back("svg/19.svg");
-  svgUrl.push_back("svg/19.svg");
-  svgUrl.push_back("svg/20.svg");
-  svgUrl.push_back("svg/21.svg");
+  vector<ofPoint*>::iterator it = points.begin();
+  vector<ofPoint*>::iterator prevIt;
+  
+  int cont = 0;
+  while(it != points.end())
+  {
+    if(cont > 0)
+    {
+      prevIt = it - 1;
+      ofLine((*it)->x, (*it)->y, (*prevIt)->x, (*prevIt)->y);
+    }
+    cont++;
+    it++;
+  }
+}
+
+void MainGUI::loadFromSVG(int id)
+{
+  clear();
+  VectorDraw::loadFromSVG(this, id, "svg/");
 }
 
 void MainGUI::loadGeometric()
 {
   clear();
-  path->newSubPath();
-  ofPoint tempPoint;
-  switch(geomId)
-  {
-    case 0:
-      for(int a = 0; a < 360; a += 10)
-      {
-        tempPoint.x = (ofGetWindowWidth() * .5) + sin(ofDegToRad(a)) *  geomParam1 * 10;
-        tempPoint.y = (ofGetWindowHeight() * .5) + cos(ofDegToRad(a)) *  geomParam1 * 10;
-        path->lineTo(tempPoint.x, tempPoint.y);
-        addSinglePoint(tempPoint.x, tempPoint.y);
-      }
-      break;
-    case 1:     // Spirale
-      for(int a = 0; a < 360 * 10; a += 10)
-      {
-        tempPoint.x = (ofGetWindowWidth() * .5) + sin(ofDegToRad(a)) * geomParam2 * (a / (geomParam1 * PI));
-        tempPoint.y = (ofGetWindowHeight() * .5) + cos(ofDegToRad(a)) * geomParam2 * (a / (geomParam1 * PI));
-        path->lineTo(tempPoint.x, tempPoint.y);
-        addSinglePoint(tempPoint.x, tempPoint.y);
-      }
-      break;
-    case 2:     // Curva a farfalla
-      for(int a = 0; a < 360 * 5; a += 10)
-      {
-        tempPoint.x = (ofGetWindowWidth() * .5) + (sin(ofDegToRad(a)) * ( pow(2, cos(ofDegToRad(a))) - 2 * cos(4*ofDegToRad(a)) - pow(sin(ofDegToRad(a)/12), 5) )) * 100;
-        tempPoint.y = (ofGetWindowHeight() * .5) + (cos(ofDegToRad(a)) * ( pow(2, cos(ofDegToRad(a))) - 2 * cos(4*ofDegToRad(a)) - pow(sin(ofDegToRad(a)/12), 5) )) * 100;
-        path->lineTo(tempPoint.x, tempPoint.y);
-        addSinglePoint(tempPoint.x, tempPoint.y);
-      }
-      break;
-    case 3:     // Curva a farfalla
-      for(int a = 0; a < 360 * 5; a += 10)
-      {
-        tempPoint.x = (ofGetWindowWidth() * .5) + geomParam1 * 10 * sin(ofDegToRad(a)) / ( 1 + (sin(ofDegToRad(a)) * sin(ofDegToRad(a))));
-        tempPoint.y = (ofGetWindowHeight() * .5) + geomParam1 * 10 * sin(ofDegToRad(a)) * cos(ofDegToRad(a)) / ( 1 + (sin(ofDegToRad(a)) * sin(ofDegToRad(a))));
-        path->lineTo(tempPoint.x, tempPoint.y);
-        addSinglePoint(tempPoint.x, tempPoint.y);
-      }
-      break;
-    default:
-      for(int a = 0; a < 400; a += 1)
-      {
-        tempPoint.x = ofGetWindowWidth() *  ofRandom(0,1);
-        tempPoint.y = ofGetWindowHeight() *  ofRandom(0,1);
-        path->lineTo(tempPoint.x, tempPoint.y);
-        addSinglePoint(tempPoint.x, tempPoint.y);
-      }
-      break;
-  }
-  path->close();
+  GeometricDraw::loadGeometric(this, geomId, geomParam1, geomParam2);
 }
 
 void MainGUI::initEvents()
@@ -145,98 +92,31 @@ void MainGUI::initEvents()
 void MainGUI::keyReleased (ofKeyEventArgs &e)
 {
   char key = e.key;
-  
   if(key == ' ')
-  {
     guiVisible = !guiVisible;
-  }
-//    shiftMode = false;
 }
 
 void MainGUI::mouseReleased(ofMouseEventArgs &e)
 {
-  int x = e.x;
-  int y = e.y;
-  path->close();
-//  straightLineMode = false;
-//  straightDirection = "";
-//  pointStraight.x = -100;
-//  pointStraight.y = -100;
 }
 
 void MainGUI::mousePressed(ofMouseEventArgs &e)
 {
-  int x = e.x;
-  int y = e.y;
-  path->newSubPath();
 }
 
 void MainGUI::mouseDragged(ofMouseEventArgs &e)
 {
-  /*
-  if(shiftMode)
-  {
-    if(pointStraight.x < 0 && straightLineMode)
-    {
-      if( abs(startPointStraight.x - e.x) >=2 || abs(startPointStraight.y - e.y) >=2  )
-      {
-        //  cout << "dentoo" << endl;
-        if(startPointStraight.x == e.x)
-          straightDirection = "vertical";
-        else //if(e.y > (startPointStraight.y) || e.y < (startPointStraight.y))
-          straightDirection = "horizontal";
-        
-        
-        pointStraight.x = e.x;
-        pointStraight.y = e.y;
-      }
-    }
-    if(!straightLineMode)
-    {
-      // cout << "dentoo 2" << endl;
-      // cout << pointStraight.x << endl,
-      straightLineMode = true;
-      startPointStraight.x = e.x;
-      startPointStraight.y = e.y;
-    }
-  }
-  */
-  
   if(guiVisible)
     return;
   int x = e.x;
   int y = e.y;
-  
-  /*
-  if(straightDirection == "horizontal")
-    y = pointStraight.y;
-  else if(straightDirection == "vertical")
-    x = pointStraight.x;
-  */
-  
-  
-  
-//  if(!cleanMode)
-//  {
-    path->lineTo(x, y);
-    addSinglePoint(x, y);
-//  }
-//  else
-//  {
-//    cleanPosition.x = x;
-//    cleanPosition.y = y;
-//  }
-  
-  if(directDraw) //&&!cleanMode)
+  addSinglePoint(x, y);
+  if(directDraw)
     sendSinglePoint(points[points.size() - 1]);
-//  if(cleanMode&&points.size() > 0)
-//    this->sendSinglePoint(x, y);
 }
 
 void MainGUI::clear()
 {
-  path->close();
-  path->clear();
   int size = points.size();
   for(int a = 0; a < size; a++)
   {
@@ -257,17 +137,8 @@ void MainGUI::addSinglePoint(int x, int y)
 
 void MainGUI::sendSinglePoint(ofPoint* tempPoint)
 {
-  ofxOscMessage m;
-  m.setAddress( "/addSinglePoint" );
-  m.addFloatArg( tempPoint->x  / ofGetWindowWidth() );
-  m.addFloatArg( tempPoint->y  / ofGetWindowHeight() );
-//  if(cleanMode)
-//    m.setAddress( "/removePoint" );
-  // if(touchBridge)
-  //cout << "send single point 1 " << endl;
- // senderToTouch.sendMessage( m );
-  if(directDraw)
-    sender.sendMessage( m );
+  sendSinglePoint(tempPoint->x, tempPoint->y);
+  tempPoint = NULL;
 }
 
 void MainGUI::sendSinglePoint(float x, float y)
@@ -276,11 +147,6 @@ void MainGUI::sendSinglePoint(float x, float y)
   m.setAddress( "/addSinglePoint" );
   m.addFloatArg( x  / ofGetWindowWidth() );
   m.addFloatArg( y  / ofGetWindowHeight() );
-  //if(cleanMode)
-   // m.setAddress( "/removePoint" );
-  // if(touchBridge)
-  //cout << "send single point 1 " << endl;
-  //senderToTouch.sendMessage( m );
   if(directDraw)
     sender.sendMessage( m );
 }
@@ -332,7 +198,7 @@ void MainGUI::initGraphicGUI()
   graphicGUI.add(clearAll.setup("Clear All"));
   vectorGroup.setName("Vector");
   vectorGroup.add(loadVector.set("Load vector", false));
-  vectorGroup.add(vectorId.set("Vector id", 0, 0, svgUrl.size()-1));
+  vectorGroup.add(vectorId.set("Vector id", 0, 0, VectorDraw::getTotSvgs("svg/")-1));
   graphicGUI.add(vectorGroup);
   geomGroup.setName("Geom");
   geomGroup.add(loadGeom.set("Load geom", false));
@@ -340,28 +206,24 @@ void MainGUI::initGraphicGUI()
   geomGroup.add(geomParam1.set("Geom param 1",0,0,1));
   geomGroup.add(geomParam2.set("Geom param 2", 0, 0, 1));
   graphicGUI.add(geomGroup);
-  
   loadGeom.addListener(this, &MainGUI::loadGeomChanged);
   loadVector.addListener(this, &MainGUI::loadSvgChanged);
-  
   vectorId.addListener(this, &MainGUI::vectorChanged);
   geomId.addListener(this, &MainGUI::geomChanged);
-  
   bClear.addListener(this, &MainGUI::clearChanged);
   clearAll.addListener(this, &MainGUI::clearAllChanged);
-  
 }
 
 void MainGUI::loadSvgChanged(bool & value)
 {
   loadVector = false;
-  loadFromSVG(svgUrl[vectorId]);
+  loadFromSVG(vectorId);
 }
 
 void MainGUI::vectorChanged(int & value)
 {
   if(!directDraw)
-    loadFromSVG(svgUrl[value]);
+    loadFromSVG(value);
 }
 
 void MainGUI::loadGeomChanged(bool & value)
@@ -376,78 +238,6 @@ void MainGUI::geomChanged(int & value)
     loadGeometric();
 }
 
-void MainGUI::loadFromSVG(string url)
-{
-  //url = "21.svg";
-  this->clear();
-  path->newSubPath();
-  ofPoint tempPoint;
-  
-  ofPoint max;
-  ofPoint min;
-  
-  max.x = -1000;
-  max.y = -1000;
-  
-  min.x = 10000;
-  min.y = 10000;
-  
-  
-  ofxSVG* mySVG;
-  mySVG = new ofxSVG();
-  mySVG->load(url);
-  
-  ofPolyline newPoly;
-  
-  ofPath newPath;
-  float totPath = mySVG->getNumPath();
-  
-  for(int a = 0; a < totPath; a++)
-  {
-    int totOutline = mySVG->getPathAt(a).getOutline().size();
-    ofPath tempPath = mySVG->getPathAt(a);
-    for(int i =0; i < totOutline; i++)
-    {
-      ofPolyline tempPolyline = tempPath.getOutline()[i];
-      int totVertex = tempPolyline.getVertices().size();
-      for(int z = 0; z < totVertex;z++)
-      {
-        if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x > max.x)
-          max.x = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x;
-        else if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y > max.y)
-          max.y = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y;
-        
-        if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x < min.x)
-          min.x = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x;
-        else if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y < min.y)
-          min.y = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y;
-        newPoly.addVertex(mySVG->getPathAt(a).getOutline()[i].getVertices()[z]);
-      }
-    }
-  }
-
-  
-  ofPoint newPosition;
-  newPosition.x = (ofGetWindowWidth() - (max.x - min.x)) * .5;
-  newPosition.y = (ofGetWindowHeight() - (max.y - min.y)) * .5;
-  
-  newPoly.simplify();
-  
-  for(int a = 0; a <  newPoly.getVertices().size(); a++)
-  {
-    tempPoint.x = newPoly[a].x + newPosition.x;
-    tempPoint.y = newPoly[a].y + newPosition.y;
-    
-    path->lineTo(tempPoint.x, tempPoint.y);
-    addSinglePoint(tempPoint.x, tempPoint.y);
-  }
-  
-  delete mySVG;
-  path->close();
-}
-
-
-
 void MainGUI::clearChanged()
 {;
   clear();
@@ -455,16 +245,11 @@ void MainGUI::clearChanged()
 
 void MainGUI::clearAllChanged()
 {
-//  clearPoints = false;
-//  clearAll = false;
   clear();
   ofxOscMessage message;
   message.clear();
   message.setAddress( "/clear" );
-//  if(clearAll)
-//  {
-    sender.sendMessage(message);
-//  }
+  sender.sendMessage(message);
 }
 
 void MainGUI::initEffecGUI()

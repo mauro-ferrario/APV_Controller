@@ -18,6 +18,8 @@
 #include "ofxOsc.h"
 #include "ofxSvg.h"
 #include "ofPath.h"
+#include "GeometricDraw.h"
+#include "VectorDraw.h"
 
 class MainGUI
 {
@@ -55,11 +57,10 @@ public:
   void                geomChanged(int & value);
   void                clearChanged();
   void                clearAllChanged();
-  void                initSVGs();
-  void                loadFromSVG(string url);
+  void                loadFromSVG(int id);
+  void                drawPoints();
+  void                initOSC();
   vector<ofPoint*>    points;
-  ofPath*             path;
-  vector<string>      svgUrl;
   
   ofxOscParameterSync syncGeneralGUI;
   
