@@ -9,7 +9,7 @@
 #ifndef __APV_Controller__MainGUI__
 #define __APV_Controller__MainGUI__
 
-#define PORT 6666
+//#define FREE_DRAW_MODE
 
 #include "ofMain.h"
 #include "ofxGui.h"
@@ -20,6 +20,7 @@
 #include "ofPath.h"
 #include "GeometricDraw.h"
 #include "VectorDraw.h"
+#include "ofxXmlSettings.h"
 
 class MainGUI
 {
@@ -32,6 +33,7 @@ public:
   void                initEffecGUI();
   void                initMovementGUI();
   void                initShaderGUI();
+  void                windowResized(int w, int h);
   ofxPanel            generalGUI;
   ofxPanel            graphicGUI;
   ofxPanel            effecGUI;
@@ -42,7 +44,9 @@ public:
   void                update();
   void                initEvents();
   void                clear();
+#ifdef FREE_DRAW_MODE
   void                mouseDragged(ofMouseEventArgs &e);
+#endif
   void                mouseReleased(ofMouseEventArgs &e);
   void                mousePressed(ofMouseEventArgs &e);
   bool                guiVisible;
@@ -64,7 +68,6 @@ public:
   void                sameFrictionChanged(float & value);
   void                repulsionForceChanged(float & value);
   
-  
   void                minPerimeterChanged(float & value);
   void                maxPerimeterChanged(float & value);
   void                minLineDistanceChanged(float & value);
@@ -79,20 +82,24 @@ public:
   void                initOSC();
   void                sendGeometric();
   void                sendManyPoints();
+  void                readXMLSettings();
   vector<ofPoint*>    points;
+  string              host;
+  int                 port;
   
   void                directDrawChanged(bool & value);
   float               guiPosY;
   
+  float               drawProp;
+  ofVec2f             outputSize;
+  ofRectangle         drawArea;
   
   ofxOscParameterSync syncGeneralGUI;
-//  ofxOscParameterSync syncGraphiclGUI;
   ofxOscParameterSync syncEffecGUI;
   ofxOscParameterSync syncMovementGUI;
   ofxOscParameterSync syncShaderGUI;
-  
-  ofxOscSender        sender;
 
+  ofxOscSender        sender;
 
   // generalGUI
   ofxLabel            visualIP;
@@ -119,10 +126,6 @@ public:
   ofParameter<int>    geomId;
   ofParameter<float>  geomParam1;
   ofParameter<float>  geomParam2;
-
-//  ofxParameterGroup   letterGroup;
-//  ofxToggle           loadLetter;
-//  ofParameter<int>    letterId;
   
   // efffecGUI
   ofxToggle           drawPoint;
@@ -147,7 +150,6 @@ public:
   ofParameter<float>  sameFriction;
   ofParameter<float>  repulsionForce;
   ofParameter<bool>   repulsionFromTarget;
-  
   
   // shaderGUI
   ofParameterGroup    pixelShader;

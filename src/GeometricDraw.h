@@ -16,7 +16,7 @@ class MainGUI;
 class GeometricDraw
 {
 public:
-  static void loadGeometric(MainGUI* mainGUI, int geomId, float geomParam1, float geomParam2);
+  static void loadGeometric(MainGUI* mainGUI, int geomId, float geomParam1, float geomParam2, ofVec2f outputSize = ofVec2f(0,0));
 };
 
 #endif /* defined(__APV_Controller__GeometricDraw__) */

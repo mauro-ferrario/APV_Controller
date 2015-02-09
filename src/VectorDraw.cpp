@@ -9,7 +9,7 @@
 #include "VectorDraw.h"
 #include "MainGUI.h"
 
-void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path)
+void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outputSize)
 {
   string url = loadSVGAddress(path)[id];
   ofPoint tempPoint;
@@ -49,8 +49,8 @@ void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path)
     }
   }
   ofPoint newPosition;
-  newPosition.x = (ofGetWindowWidth() - (max.x - min.x)) * .5;
-  newPosition.y = (ofGetWindowHeight() - (max.y - min.y)) * .5;
+  newPosition.x = (outputSize.x - (max.x - min.x)) * .5;
+  newPosition.y = (outputSize.y - (max.y - min.y)) * .5;
   newPoly.simplify();
   for(int a = 0; a <  newPoly.getVertices().size(); a++)
   {

@@ -15,27 +15,51 @@ MainGUI::MainGUI()
 
 void MainGUI::init()
 {
+  readXMLSettings();
   guiVisible = false;
   timelineVisible = true;
+  initTimeline();
+  guiPosY = timeline.getHeight()+10;
   initGeneralGUI();
   initGraphicGUI();
   initEffecGUI();
   initMovementGUI();
   initShaderGUI();
-  initTimeline();
   initEvents();
   initOSC();
   directDraw      = true;
-  guiPosY = timeline.getHeight()+10;
+  drawProp = outputSize.x/outputSize.y;
+}
+
+void MainGUI::readXMLSettings()
+{
+  ofxXmlSettings xml;
+  xml.load("mySettings.xml");
+  outputSize.x = xml.getValue("controller:output:width", 0);
+  outputSize.y = xml.getValue("controller:output:height", 0);
+  host = xml.getValue("controller:output:host", "");
+  port = xml.getValue("controller:output:port", 0);
+  cout << outputSize << endl;
+  cout << host << endl;
+  cout << port << endl;
 }
 
 void MainGUI::initOSC()
 {
-  sender.setup( "127.0.0.1",PORT);
+  sender.setup(host, port);
 }
 
 void MainGUI::draw()
 {
+  ofPushStyle();
+  ofSetColor(100,100);
+  drawArea.width = ofGetWindowWidth();
+  drawArea.height = drawArea.width/drawProp;
+  drawArea.x = 0;
+  drawArea.y = (ofGetWindowHeight() - drawArea.height)*.5;
+  ofRect(drawArea);
+  ofPopStyle();
+  
   ofSetColor(255);
   drawPoints();
   if(timelineVisible)
@@ -61,36 +85,44 @@ void MainGUI::drawPoints()
   vector<ofPoint*>::iterator it = points.begin();
   vector<ofPoint*>::iterator prevIt;
   
+  ofPushMatrix();
+  ofVec2f offset;
+  offset.x = 0;
+  offset.y = drawArea.y;
+  ofTranslate(offset);
+  
   int cont = 0;
   while(it != points.end())
   {
     if(cont > 0)
     {
       prevIt = it - 1;
-      ofLine((*it)->x, (*it)->y, (*prevIt)->x, (*prevIt)->y);
+      ofLine((*it)->x/outputSize.x*drawArea.width, (*it)->y/outputSize.y*drawArea.height, (*prevIt)->x/outputSize.x*drawArea.width, (*prevIt)->y/outputSize.y*drawArea.height);
     }
     cont++;
     it++;
   }
+  ofPopMatrix();
 }
 
 void MainGUI::loadFromSVG(int id)
 {
   clear();
-  VectorDraw::loadFromSVG(this, id, "svg/");
+  VectorDraw::loadFromSVG(this, id, "svg/", outputSize);
 }
 
 void MainGUI::loadGeometric()
 {
   clear();
-  GeometricDraw::loadGeometric(this, geomId, geomParam1, geomParam2);
+  GeometricDraw::loadGeometric(this, geomId, geomParam1, geomParam2, outputSize);
 }
 
 void MainGUI::initEvents()
 {
   ofAddListener(ofEvents().keyReleased, this, &MainGUI::keyReleased);
-//  ofAddListener(ofEvents().keyPressed, this, &MainGUI::keyPressed);
+#ifdef FREE_DRAW_MODE
   ofAddListener(ofEvents().mouseDragged, this, &MainGUI::mouseDragged);
+#endif
   ofAddListener(ofEvents().mousePressed, this, &MainGUI::mousePressed);
   ofAddListener(ofEvents().mouseReleased, this, &MainGUI::mouseReleased);
 }
@@ -114,6 +146,7 @@ void MainGUI::mousePressed(ofMouseEventArgs &e)
 {
 }
 
+#ifdef FREE_DRAW_MODE
 void MainGUI::mouseDragged(ofMouseEventArgs &e)
 {
   if(guiVisible||timelineVisible)
@@ -124,6 +157,7 @@ void MainGUI::mouseDragged(ofMouseEventArgs &e)
   if(directDraw)
     sendSinglePoint(points[points.size() - 1]);
 }
+#endif
 
 void MainGUI::clear()
 {
@@ -155,8 +189,8 @@ void MainGUI::sendSinglePoint(float x, float y)
 {
   ofxOscMessage m;
   m.setAddress( "/addSinglePoint" );
-  m.addFloatArg( x  / ofGetWindowWidth() );
-  m.addFloatArg( y  / ofGetWindowHeight() );
+  m.addFloatArg( x  / outputSize.x );
+  m.addFloatArg( y  / outputSize.y );
   if(directDraw)
     sender.sendMessage( m );
 }
@@ -292,7 +326,7 @@ void MainGUI::initGeneralGUI()
   generalGUI.add(volumeGroup);
   toggleFullscreen.addListener(this, &MainGUI::toggleFullscreenChanged);
   togglePlayPauseTimeline.addListener(this, &MainGUI::togglePlayPauseTimelineChanged);
-  syncGeneralGUI.setup((ofParameterGroup&)generalGUI.getParameter(),6660,"localhost",6666);
+  syncGeneralGUI.setup((ofParameterGroup&)generalGUI.getParameter(),6660, host,port);
 }
 
 void MainGUI::initGraphicGUI()
@@ -319,7 +353,6 @@ void MainGUI::initGraphicGUI()
   bClear.addListener(this, &MainGUI::clearChanged);
   clearAll.addListener(this, &MainGUI::clearAllChanged);
   directDraw.addListener(this, &MainGUI::directDrawChanged);
-  //syncGraphiclGUI.setup((ofParameterGroup&)graphicGUI.getParameter(),6661,"localhost",6666);
 }
 
 void MainGUI::directDrawChanged(bool & value)
@@ -390,8 +423,8 @@ void MainGUI::sendManyPoints()
   {
     if(a%301 == 0 && a >= 0)
     {
-      message.addFloatArg( points[a]->x  / ofGetWindowWidth() );
-      message.addFloatArg( points[a]->y  / ofGetWindowHeight() );
+      message.addFloatArg( points[a]->x  / outputSize.x );
+      message.addFloatArg( points[a]->y  / outputSize.y );
       sender.sendMessage(message);
       cont++;
       message.clear();
@@ -402,8 +435,8 @@ void MainGUI::sendManyPoints()
       message.addFloatArg(pointToSend);
       contPoint = 0;
     }
-    message.addFloatArg( points[a]->x  / ofGetWindowWidth() );
-    message.addFloatArg( points[a]->y  / ofGetWindowHeight() );
+    message.addFloatArg( points[a]->x  / outputSize.x );
+    message.addFloatArg( points[a]->y  / outputSize.y );
     contPoint++;
   }
   if(points.size()%301 != 0)
@@ -446,7 +479,7 @@ void MainGUI::initEffecGUI()
   maxPerimeter.addListener(this, &MainGUI::maxPerimeterChanged);
   minLineDistance.addListener(this, &MainGUI::minLineDistanceChanged);
   maxLineDistance.addListener(this, &MainGUI::maxLineDistanceChanged);
-  syncEffecGUI.setup((ofParameterGroup&)effecGUI.getParameter(),6662,"localhost",6666);
+  syncEffecGUI.setup((ofParameterGroup&)effecGUI.getParameter(),6662, host,port);
 }
 
 
@@ -474,7 +507,7 @@ void MainGUI::initMovementGUI()
   sameSpring.addListener(this, &MainGUI::sameSpringChanged);
   sameFriction.addListener(this, &MainGUI::sameFrictionChanged);
   repulsionForce.addListener(this, &MainGUI::repulsionForceChanged);
-  syncMovementGUI.setup((ofParameterGroup&)movementGUI.getParameter(),6663,"localhost",6666);
+  syncMovementGUI.setup((ofParameterGroup&)movementGUI.getParameter(),6663,host,port);
 }
 
 void MainGUI::particleSpeedChanged(float & value)
@@ -577,6 +610,12 @@ void MainGUI::initShaderGUI()
   pixelShader.add(pixelWidth.set("Pixel Width",0,0,1));
   pixelShader.add(pixelHeight.set("Pixel Height", 0, 0, 1));
   shaderGUI.add(pixelShader);
-  syncShaderGUI.setup((ofParameterGroup&)shaderGUI.getParameter(),6664,"localhost",6666);
+  syncShaderGUI.setup((ofParameterGroup&)shaderGUI.getParameter(),6664,host, port);
 }
+
+void MainGUI::windowResized(int w, int h)
+{
+  
+}
+
 

@@ -17,7 +17,7 @@ class MainGUI;
 class VectorDraw
 {
 public:
-  static void                 loadFromSVG(MainGUI* mainGUI, int id, string path);
+  static void                 loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outputSize);
   static vector<string>       loadSVGAddress(string path);
   static int                  getTotSvgs(string path);
 };

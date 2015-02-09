@@ -1,0 +1,53 @@
+<General>
+	<Visual_IP/>
+	<Fullscreen>1</Fullscreen>
+	<Secure_Limit>1</Secure_Limit>
+	<Visual_Framerate/>
+	<Play_Pause_Timeline>0</Play_Pause_Timeline>
+	<Volume>
+		<Manual_Invert>0</Manual_Invert>
+		<Force_Invert>0</Force_Invert>
+		<Volume_Invert_Limit>0</Volume_Invert_Limit>
+	</Volume>
+<Graphic>
+		<Direct_draw>1</Direct_draw>
+		<Vector>
+			<Load_vector>0</Load_vector>
+			<Vector_id>0</Vector_id>
+		</Vector>
+		<Geom>
+			<Load_geom>0</Load_geom>
+			<Geom_id>0</Geom_id>
+			<Geom_param_1>0</Geom_param_1>
+			<Geom_param_2>0</Geom_param_2>
+		</Geom>
+	</Graphic>
+<Effect>
+		<Draw_point>0</Draw_point>
+		<Draw_triangle>0</Draw_triangle>
+		<Connect_to_prev_point>0</Connect_to_prev_point>
+		<Connect_points>0</Connect_points>
+		<Triangles>
+			<Same_Color_Triangles>1</Same_Color_Triangles>
+			<Min_Perimeter>0</Min_Perimeter>
+			<Max_Perimeter>0</Max_Perimeter>
+			<Triangle_Limit>0</Triangle_Limit>
+			<Color>1, 1, 1, 1</Color>
+		</Triangles>
+		<Connect_Lines>
+			<Min_Line_Distance>0</Min_Line_Distance>
+			<Max_Line_Distance>0</Max_Line_Distance>
+			<Line_Range_Limit>0</Line_Range_Limit>
+		</Connect_Lines>
+	</Effect>
+<Shaders>
+		<Pixel_Shader>
+			<Pixel_Effect>0</Pixel_Effect>
+			<Half_Pixel_Effect>0</Half_Pixel_Effect>
+			<Same_Pixel_Size>0</Same_Pixel_Size>
+			<Pixel_Size_Limit>0</Pixel_Size_Limit>
+			<Pixel_Width>0</Pixel_Width>
+			<Pixel_Height>0</Pixel_Height>
+		</Pixel_Shader>
+	</Shaders>
+</General>

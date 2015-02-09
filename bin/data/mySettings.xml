@@ -1,0 +1,8 @@
+<controller>
+    <output>
+        <width>1920</width>
+        <height>1080</height>
+        <host>127.0.0.1</host>
+        <port>6666</port>
+    </output>
+</controller>

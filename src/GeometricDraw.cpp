@@ -9,11 +9,23 @@
 #include "GeometricDraw.h"
 #include "MainGUI.h"
 
-void GeometricDraw::loadGeometric(MainGUI* mainGUI, int geomId, float geomParam1, float geomParam2)
+void GeometricDraw::loadGeometric(MainGUI* mainGUI, int geomId, float geomParam1, float geomParam2, ofVec2f outputSize)
 {
+  int width = 0;
+  int height = 0;
   ofPoint tempPoint;
-  float windowWidth = ofGetWindowWidth();
-  float windowHeight = ofGetWindowHeight();
+  if(outputSize.x == 0 && outputSize.y == 0)
+  {
+    width = ofGetWindowWidth();
+    height = ofGetWindowHeight();
+  }
+  else
+  {
+    width = outputSize.x;
+    height = outputSize.y;
+  }
+  float windowWidth = width;
+  float windowHeight = height;
   float halfWindowWidth = windowWidth*.5;
   float halfWindowHeight = windowHeight*.5;
   switch(geomId)
