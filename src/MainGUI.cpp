@@ -16,6 +16,7 @@ MainGUI::MainGUI()
 void MainGUI::init()
 {
   guiVisible = false;
+  timelineVisible = true;
   initGeneralGUI();
   initGraphicGUI();
   initEffecGUI();
@@ -35,13 +36,16 @@ void MainGUI::draw()
 {
   ofSetColor(255);
   drawPoints();
-  if(guiVisible)
+  if(timelineVisible)
   {
     ofPushStyle();
     ofSetColor(0);
-    ofRect(0,0,ofGetWindowWidth(), 224);
+    ofRect(0,0,ofGetWindowWidth(), timeline.getHeight());
     ofPopStyle();
     timeline.draw();
+  }
+  if(guiVisible)
+  {
     generalGUI.draw();
     graphicGUI.draw();
     effecGUI.draw();
@@ -92,8 +96,10 @@ void MainGUI::initEvents()
 void MainGUI::keyReleased (ofKeyEventArgs &e)
 {
   char key = e.key;
-  if(key == ' ')
+  if(e.key == OF_KEY_UP)
     guiVisible = !guiVisible;
+  if(e.key == OF_KEY_DOWN)
+    timelineVisible = !timelineVisible;
 }
 
 void MainGUI::mouseReleased(ofMouseEventArgs &e)
@@ -106,7 +112,7 @@ void MainGUI::mousePressed(ofMouseEventArgs &e)
 
 void MainGUI::mouseDragged(ofMouseEventArgs &e)
 {
-  if(guiVisible)
+  if(guiVisible||timelineVisible)
     return;
   int x = e.x;
   int y = e.y;
@@ -153,12 +159,31 @@ void MainGUI::sendSinglePoint(float x, float y)
 
 void MainGUI::update()
 {
-  ofColor newColor;
-  newColor.r = timeline.getValue("Color r");
-  newColor.g = timeline.getValue("Color g");
-  newColor.b = timeline.getValue("Color b");
-  color = newColor;
+  if(timeline.getIsPlaying())
+  {
+    ofColor newColor;
+    newColor.r = timeline.getValue("Color r") * 255;
+    newColor.g = timeline.getValue("Color g") * 255;
+    newColor.b = timeline.getValue("Color b") * 255;
+    color = newColor;
+    
+    particleSpeed = timeline.getValue("Particle Speed");
+    sameSpring = timeline.getValue("Same Spring");
+    sameFriction = timeline.getValue("Same Friction");
+    repulsionForce = timeline.getValue("Repulson Force");
+    
+    
+    minPerimeter = timeline.getValue("Min Perimeter");
+    maxPerimeter = timeline.getValue("Max Perimeter");
+    minLineDistance = timeline.getValue("Min Line Distance");
+    maxLineDistance = timeline.getValue("Max Line Distance");
+  }
   syncGeneralGUI.update();
+  //syncGraphiclGUI.update();
+  syncEffecGUI.update();
+  syncMovementGUI.update();
+  syncShaderGUI.update();
+  ofSetWindowTitle(ofToString(ofGetFrameRate()));
 }
 
 void MainGUI::initTimeline()
@@ -171,6 +196,79 @@ void MainGUI::initTimeline()
   timeline.addCurves("Color r");
   timeline.addCurves("Color g");
   timeline.addCurves("Color b");
+  timeline.addCurves("Particle Speed");
+  timeline.addCurves("Same Spring");
+  timeline.addCurves("Same Friction");
+  timeline.addCurves("Repulson Force");
+  
+  timeline.addCurves("Min Perimeter");
+  timeline.addCurves("Max Perimeter");
+  
+  timeline.addCurves("Min Line Distance");
+  timeline.addCurves("Max Line Distance");
+  
+  timeline.addFlags("Change Command");
+  ofAddListener(timeline.events().bangFired, this, &MainGUI::receivedBang);
+}
+
+void MainGUI::receivedBang(ofxTLBangEventArgs& bang)
+{
+  ofLogNotice("Bang fired from track " + bang.flag);
+  if(bang.flag == "Draw")
+  {
+    directDraw = true;
+  }
+  if(bang.flag == "DrawFalse")
+  {
+    directDraw = false;
+  }
+  if(bang.flag == "Clear")
+  {
+    clearChanged();
+  }
+  if(bang.flag == "ClearAll")
+  {
+    clearAllChanged();
+  }
+  int loadVectorPos = bang.flag.find("LoadVector");
+  if(loadVectorPos >= 0)
+  {
+    bool fakeBool = true;
+    vectorId = ofToInt(ofSplitString(bang.flag, "LoadVector")[1]);
+    loadSvgChanged(fakeBool);
+  }
+  if(bang.flag == "DrawPoint")
+  {
+    drawPoint = true;
+  }
+  if(bang.flag == "DrawPointFalse")
+  {
+    drawPoint = false;
+  }
+  if(bang.flag == "ConnectPoints")
+  {
+    connectPoints = true;
+  }
+  if(bang.flag == "ConnectPointsFalse")
+  {
+    connectPoints = false;
+  }
+  if(bang.flag == "PrevPoint")
+  {
+    connectPrevPoint = true;
+  }
+  if(bang.flag == "PrevPointFalse")
+  {
+    connectPrevPoint = false;
+  }
+  if(bang.flag == "DrawTriangle")
+  {
+    drawTriangle = true;
+  }
+  if(bang.flag == "DrawTriangleFalse")
+  {
+    drawTriangle = false;
+  }
 }
 
 void MainGUI::initGeneralGUI()
@@ -178,15 +276,18 @@ void MainGUI::initGeneralGUI()
   generalGUI.setup("General");
   generalGUI.setPosition(ofPoint(0,230));
   generalGUI.add(visualIP.setup("Visual IP", ""));
-  generalGUI.add(toggleFullscreen.setup("Fullscreen"));
+  generalGUI.add(toggleFullscreen.set("Fullscreen", true));
   generalGUI.add(secureLimit.setup("Secure Limit",true));
   generalGUI.add(visualFrameRate.setup("Visual Framerate",""));
+  generalGUI.add(togglePlayPauseTimeline.set("Play/Pause Timeline",false));
   volumeGroup.setName("Volume");
   volumeGroup.add(manualInvert.set("Manual Invert", false));
   volumeGroup.add(forceInvert.set("Force Invert", false));
   volumeGroup.add(volumeInvertLimit.set("Volume Invert Limit", 0, 0, 1));
   generalGUI.add(volumeGroup);
-  syncGeneralGUI.setup((ofParameterGroup&)generalGUI.getParameter(),6667,"localhost",12345);
+  toggleFullscreen.addListener(this, &MainGUI::toggleFullscreenChanged);
+  togglePlayPauseTimeline.addListener(this, &MainGUI::togglePlayPauseTimelineChanged);
+  syncGeneralGUI.setup((ofParameterGroup&)generalGUI.getParameter(),6660,"localhost",6666);
 }
 
 void MainGUI::initGraphicGUI()
@@ -212,6 +313,7 @@ void MainGUI::initGraphicGUI()
   geomId.addListener(this, &MainGUI::geomChanged);
   bClear.addListener(this, &MainGUI::clearChanged);
   clearAll.addListener(this, &MainGUI::clearAllChanged);
+  //syncGraphiclGUI.setup((ofParameterGroup&)graphicGUI.getParameter(),6661,"localhost",6666);
 }
 
 void MainGUI::loadSvgChanged(bool & value)
@@ -236,6 +338,17 @@ void MainGUI::geomChanged(int & value)
 {
   if(!directDraw)
     loadGeometric();
+}
+
+void MainGUI::toggleFullscreenChanged(bool & value)
+{
+  toggleFullscreen = false;
+}
+
+void MainGUI::togglePlayPauseTimelineChanged(bool & value)
+{
+  togglePlayPauseTimeline = false;
+  timeline.togglePlay();
 }
 
 void MainGUI::clearChanged()
@@ -272,6 +385,24 @@ void MainGUI::initEffecGUI()
   connectLinesGroup.add(maxLineDistance.set("Max Line Distance",0,0,1));
   connectLinesGroup.add(lineRangeLimit.set("Line Range Limit", 0, 0, 1));
   effecGUI.add(connectLinesGroup);
+  color.addListener(this, &MainGUI::colorChanged);
+  minPerimeter.addListener(this, &MainGUI::minPerimeterChanged);
+  maxPerimeter.addListener(this, &MainGUI::maxPerimeterChanged);
+  minLineDistance.addListener(this, &MainGUI::minLineDistanceChanged);
+  maxLineDistance.addListener(this, &MainGUI::maxLineDistanceChanged);
+  syncEffecGUI.setup((ofParameterGroup&)effecGUI.getParameter(),6662,"localhost",6666);
+}
+
+
+void MainGUI::colorChanged(ofFloatColor & newColor)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Effect/Triangles/Color");
+    message.addStringArg(ofToString(newColor.r) +", "+ofToString(newColor.g)+ ","+ofToString(newColor.b)+","+ofToString(newColor.a));
+    //sender.sendMessage(message);
+  }
 }
 
 void MainGUI::initMovementGUI()
@@ -283,6 +414,99 @@ void MainGUI::initMovementGUI()
   movementGUI.add(sameFriction.set("Same Friction", 0, 0, 1));
   movementGUI.add(repulsionForce.set("Repulsion Force", 0, 0, 1));
   movementGUI.add(repulsionFromTarget.set("Repulsion From Target", false));
+  particleSpeed.addListener(this, &MainGUI::particleSpeedChanged);
+  sameSpring.addListener(this, &MainGUI::sameSpringChanged);
+  sameFriction.addListener(this, &MainGUI::sameFrictionChanged);
+  repulsionForce.addListener(this, &MainGUI::repulsionForceChanged);
+  syncMovementGUI.setup((ofParameterGroup&)movementGUI.getParameter(),6663,"localhost",6666);
+}
+
+void MainGUI::particleSpeedChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Movement/Particle_Speed");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
+}
+
+void MainGUI::sameSpringChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Movement/Same_Spring");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
+}
+
+void MainGUI::sameFrictionChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Movement/Same_Friction");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
+}
+
+void MainGUI::repulsionForceChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Movement/Repulsion_Force");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
+}
+
+void MainGUI::minPerimeterChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Effect/Triangles/Min_Perimeter");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
+}
+
+void MainGUI::maxPerimeterChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Effect/Triangles/Max_Perimeter");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
+}
+
+void MainGUI::minLineDistanceChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Effect/Connect_Lines/Min_Line_Distance");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
+}
+
+void MainGUI::maxLineDistanceChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+  {
+    ofxOscMessage message;
+    message.setAddress("/Effect/Connect_Lines/Max_Line_Distance");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
+  }
 }
 
 void MainGUI::initShaderGUI()
@@ -297,5 +521,6 @@ void MainGUI::initShaderGUI()
   pixelShader.add(pixelWidth.set("Pixel Width",0,0,1));
   pixelShader.add(pixelHeight.set("Pixel Height", 0, 0, 1));
   shaderGUI.add(pixelShader);
+  syncShaderGUI.setup((ofParameterGroup&)shaderGUI.getParameter(),6664,"localhost",6666);
 }
 

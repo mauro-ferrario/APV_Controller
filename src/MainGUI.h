@@ -9,7 +9,7 @@
 #ifndef __APV_Controller__MainGUI__
 #define __APV_Controller__MainGUI__
 
-#define PORT 12345
+#define PORT 6666
 
 #include "ofMain.h"
 #include "ofxGui.h"
@@ -46,32 +46,54 @@ public:
   void                mouseReleased(ofMouseEventArgs &e);
   void                mousePressed(ofMouseEventArgs &e);
   bool                guiVisible;
+  bool                timelineVisible;
   void                sendSinglePoint(ofPoint* tempPoint);
   void                sendSinglePoint(float x, float y);
   void                addSinglePoint(int x, int y);
   void                keyReleased (ofKeyEventArgs &e);
   void                loadGeometric();
+  void                togglePlayPauseTimelineChanged(bool & value);
+  void                toggleFullscreenChanged(bool& value);
   void                loadGeomChanged(bool & value);
   void                loadSvgChanged(bool & value);
   void                vectorChanged(int & value);
   void                geomChanged(int & value);
+  
+  void                particleSpeedChanged(float & value);
+  void                sameSpringChanged(float & value);
+  void                sameFrictionChanged(float & value);
+  void                repulsionForceChanged(float & value);
+  
+  
+  void                minPerimeterChanged(float & value);
+  void                maxPerimeterChanged(float & value);
+  void                minLineDistanceChanged(float & value);
+  void                maxLineDistanceChanged(float & value);
+  
+  void                colorChanged(ofFloatColor & newColor);
   void                clearChanged();
   void                clearAllChanged();
   void                loadFromSVG(int id);
+  void                receivedBang(ofxTLBangEventArgs& bang);
   void                drawPoints();
   void                initOSC();
   vector<ofPoint*>    points;
   
   ofxOscParameterSync syncGeneralGUI;
+//  ofxOscParameterSync syncGraphiclGUI;
+  ofxOscParameterSync syncEffecGUI;
+  ofxOscParameterSync syncMovementGUI;
+  ofxOscParameterSync syncShaderGUI;
   
   ofxOscSender        sender;
 
 
   // generalGUI
   ofxLabel            visualIP;
-  ofxButton           toggleFullscreen;
+  ofParameter<bool>   toggleFullscreen;
   ofxToggle           secureLimit;
   ofxLabel            visualFrameRate;
+  ofParameter<bool>   togglePlayPauseTimeline;
   
   ofParameterGroup    volumeGroup;
   ofParameter<bool>   manualInvert;

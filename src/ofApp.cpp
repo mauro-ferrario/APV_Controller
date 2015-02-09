@@ -5,6 +5,7 @@ void ofApp::setup(){
   ofSetFrameRate(60);
   ofBackground(0);
   controller.init();
+  ofSetLogLevel(OF_LOG_ERROR);
 }
 
 //--------------------------------------------------------------
