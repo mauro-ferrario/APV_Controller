@@ -25,6 +25,8 @@ void MainGUI::init()
   initTimeline();
   initEvents();
   initOSC();
+  directDraw      = true;
+  guiPosY = timeline.getHeight()+10;
 }
 
 void MainGUI::initOSC()
@@ -100,6 +102,8 @@ void MainGUI::keyReleased (ofKeyEventArgs &e)
     guiVisible = !guiVisible;
   if(e.key == OF_KEY_DOWN)
     timelineVisible = !timelineVisible;
+  if(e.key == ' ')
+    timeline.togglePlay();
 }
 
 void MainGUI::mouseReleased(ofMouseEventArgs &e)
@@ -217,6 +221,7 @@ void MainGUI::receivedBang(ofxTLBangEventArgs& bang)
   if(bang.flag == "Draw")
   {
     directDraw = true;
+    sendManyPoints();
   }
   if(bang.flag == "DrawFalse")
   {
@@ -274,7 +279,7 @@ void MainGUI::receivedBang(ofxTLBangEventArgs& bang)
 void MainGUI::initGeneralGUI()
 {
   generalGUI.setup("General");
-  generalGUI.setPosition(ofPoint(0,230));
+  generalGUI.setPosition(ofPoint(0,guiPosY));
   generalGUI.add(visualIP.setup("Visual IP", ""));
   generalGUI.add(toggleFullscreen.set("Fullscreen", true));
   generalGUI.add(secureLimit.setup("Secure Limit",true));
@@ -293,7 +298,7 @@ void MainGUI::initGeneralGUI()
 void MainGUI::initGraphicGUI()
 {
   graphicGUI.setup("Graphic");
-  graphicGUI.setPosition(ofPoint(210,230));
+  graphicGUI.setPosition(ofPoint(210,guiPosY));
   graphicGUI.add(directDraw.setup("Direct draw", true));
   graphicGUI.add(bClear.setup("Clear"));
   graphicGUI.add(clearAll.setup("Clear All"));
@@ -313,13 +318,22 @@ void MainGUI::initGraphicGUI()
   geomId.addListener(this, &MainGUI::geomChanged);
   bClear.addListener(this, &MainGUI::clearChanged);
   clearAll.addListener(this, &MainGUI::clearAllChanged);
+  directDraw.addListener(this, &MainGUI::directDrawChanged);
   //syncGraphiclGUI.setup((ofParameterGroup&)graphicGUI.getParameter(),6661,"localhost",6666);
+}
+
+void MainGUI::directDrawChanged(bool & value)
+{
+  if(value == 1)
+    sendManyPoints();
 }
 
 void MainGUI::loadSvgChanged(bool & value)
 {
   loadVector = false;
   loadFromSVG(vectorId);
+  if(directDraw)
+    sendManyPoints();
 }
 
 void MainGUI::vectorChanged(int & value)
@@ -332,6 +346,8 @@ void MainGUI::loadGeomChanged(bool & value)
 {
   loadGeom = false;
   loadGeometric();
+  if(directDraw)
+    sendManyPoints();
 }
 
 void MainGUI::geomChanged(int & value)
@@ -343,6 +359,7 @@ void MainGUI::geomChanged(int & value)
 void MainGUI::toggleFullscreenChanged(bool & value)
 {
   toggleFullscreen = false;
+  ofToggleFullscreen();
 }
 
 void MainGUI::togglePlayPauseTimelineChanged(bool & value)
@@ -352,9 +369,49 @@ void MainGUI::togglePlayPauseTimelineChanged(bool & value)
 }
 
 void MainGUI::clearChanged()
-{;
+{
   clear();
 }
+
+void MainGUI::sendGeometric()
+{
+  }
+
+void MainGUI::sendManyPoints()
+{
+  ofxOscMessage message;
+  message.clear();
+  message.setAddress( "/loadShape" );
+  int cont = 0;
+  int contPoint = 0;
+  message.addIntArg(points.size());
+  cont = -1;
+  for(int a = 0; a < points.size(); a++)
+  {
+    if(a%301 == 0 && a >= 0)
+    {
+      message.addFloatArg( points[a]->x  / ofGetWindowWidth() );
+      message.addFloatArg( points[a]->y  / ofGetWindowHeight() );
+      sender.sendMessage(message);
+      cont++;
+      message.clear();
+      message.setAddress( "/addPoint" );
+      int pointToSend = (points.size() - a);
+      if(pointToSend >= 301)
+        pointToSend = 301;
+      message.addFloatArg(pointToSend);
+      contPoint = 0;
+    }
+    message.addFloatArg( points[a]->x  / ofGetWindowWidth() );
+    message.addFloatArg( points[a]->y  / ofGetWindowHeight() );
+    contPoint++;
+  }
+  if(points.size()%301 != 0)
+  {
+    sender.sendMessage( message );
+  }
+}
+
 
 void MainGUI::clearAllChanged()
 {
@@ -368,7 +425,7 @@ void MainGUI::clearAllChanged()
 void MainGUI::initEffecGUI()
 {
   effecGUI.setup("Effect");
-  effecGUI.setPosition(ofPoint(420,230));
+  effecGUI.setPosition(ofPoint(420,guiPosY));
   effecGUI.add(drawPoint.setup("Draw point", false));
   effecGUI.add(drawTriangle.setup("Draw triangle", false));
   effecGUI.add(connectPrevPoint.setup("Connect to prev point", false));
@@ -383,7 +440,6 @@ void MainGUI::initEffecGUI()
   connectLinesGroup.setName("Connect Lines");
   connectLinesGroup.add(minLineDistance.set("Min Line Distance", 0, 0, 1));
   connectLinesGroup.add(maxLineDistance.set("Max Line Distance",0,0,1));
-  connectLinesGroup.add(lineRangeLimit.set("Line Range Limit", 0, 0, 1));
   effecGUI.add(connectLinesGroup);
   color.addListener(this, &MainGUI::colorChanged);
   minPerimeter.addListener(this, &MainGUI::minPerimeterChanged);
@@ -401,14 +457,14 @@ void MainGUI::colorChanged(ofFloatColor & newColor)
     ofxOscMessage message;
     message.setAddress("/Effect/Triangles/Color");
     message.addStringArg(ofToString(newColor.r) +", "+ofToString(newColor.g)+ ","+ofToString(newColor.b)+","+ofToString(newColor.a));
-    //sender.sendMessage(message);
+    sender.sendMessage(message);
   }
 }
 
 void MainGUI::initMovementGUI()
 {
   movementGUI.setup("Movement");
-  movementGUI.setPosition(ofPoint(630,230));
+  movementGUI.setPosition(ofPoint(630,guiPosY));
   movementGUI.add(particleSpeed.set("Particle Speed", 0, 0, 1));
   movementGUI.add(sameSpring.set("Same Spring",0,0,1));
   movementGUI.add(sameFriction.set("Same Friction", 0, 0, 1));
@@ -512,7 +568,7 @@ void MainGUI::maxLineDistanceChanged(float & value)
 void MainGUI::initShaderGUI()
 {
   shaderGUI.setup("Shaders");
-  shaderGUI.setPosition(ofPoint(840,230));
+  shaderGUI.setPosition(ofPoint(840,guiPosY));
   pixelShader.setName("Pixel Shader");
   pixelShader.add(pixelEffect.set("Pixel Effect", false));
   pixelShader.add(halfPixelEffect.set("Half Pixel Effect", false));

@@ -77,7 +77,13 @@ public:
   void                receivedBang(ofxTLBangEventArgs& bang);
   void                drawPoints();
   void                initOSC();
+  void                sendGeometric();
+  void                sendManyPoints();
   vector<ofPoint*>    points;
+  
+  void                directDrawChanged(bool & value);
+  float               guiPosY;
+  
   
   ofxOscParameterSync syncGeneralGUI;
 //  ofxOscParameterSync syncGraphiclGUI;
@@ -134,7 +140,6 @@ public:
   ofParameterGroup    connectLinesGroup;
   ofParameter<float>  minLineDistance;
   ofParameter<float>  maxLineDistance;
-  ofParameter<float>  lineRangeLimit;
   
   // movementGUI
   ofParameter<float>  particleSpeed;
