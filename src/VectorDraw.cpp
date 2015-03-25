@@ -63,6 +63,32 @@ void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outp
   {
     tempPoint.x = newPoly[a].x + newPosition.x;
     tempPoint.y = newPoly[a].y + newPosition.y;
+    if(addDirtyPoints)
+    {
+      if(ofRandom(0,1) > .7)
+      {
+        if(ofRandom(0,1) > .7)
+        {
+          float newRandom = ofRandom(0,1);
+          if(newRandom < .25)
+          {
+            mainGUI->addSinglePoint(ofRandom(-200,-100), ofRandom(1080));
+          }
+          else if(newRandom < .5)
+          {
+            mainGUI->addSinglePoint(1920 + ofRandom(100,200), ofRandom(1080));
+          }
+          else if(newRandom < .75)
+          {
+            mainGUI->addSinglePoint(ofRandom(1920), ofRandom(-200,100));
+          }
+          else
+          {
+            mainGUI->addSinglePoint(ofRandom(1920), 1080 + ofRandom(100,200));
+          }
+        }
+      }
+    }
     mainGUI->addSinglePoint(tempPoint.x, tempPoint.y);
   }
   mainGUI = NULL;
