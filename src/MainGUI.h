@@ -21,6 +21,7 @@
 #include "GeometricDraw.h"
 #include "VectorDraw.h"
 #include "ofxXmlSettings.h"
+#include "PolyLineException.h"
 
 class MainGUI
 {
@@ -72,6 +73,15 @@ public:
   void                maxPerimeterChanged(float & value);
   void                minLineDistanceChanged(float & value);
   void                maxLineDistanceChanged(float & value);
+  void                audioInvertCoefficentChanged(float & value);
+  void                scaleFactorChanged(float & value);
+  void                sendFloatValue(string address, float value);
+  void                playbackLoopedHandler(ofxTLPlaybackEventArgs& event);
+  void                playbackStartedHandler(ofxTLPlaybackEventArgs& event);
+  void                playbackEndedHandler(ofxTLPlaybackEventArgs& event);
+  void                sendPlaybackState();
+  bool                canChangePoints;
+  int                 timerCanChangePoints;
   
   void                colorChanged(ofFloatColor & newColor);
   void                clearChanged();
@@ -88,6 +98,7 @@ public:
   int                 port;
   
   void                directDrawChanged(bool & value);
+  void                addToDrawChanged(bool & value);
   float               guiPosY;
   
   float               drawProp;
@@ -107,6 +118,7 @@ public:
   ofxToggle           secureLimit;
   ofxLabel            visualFrameRate;
   ofParameter<bool>   togglePlayPauseTimeline;
+  ofParameter<float>  audioInvertCoefficent;
   
   ofParameterGroup    volumeGroup;
   ofParameter<bool>   manualInvert;
@@ -116,6 +128,7 @@ public:
   ofxButton           bClear;
   ofxButton           clearAll;
   ofxToggle           directDraw;
+  ofxToggle           addToDraw;
 
   ofParameterGroup    vectorGroup;
   ofParameter<bool>   loadVector;
@@ -138,6 +151,7 @@ public:
   ofParameter<float>  minPerimeter;
   ofParameter<float>  maxPerimeter;
   ofParameter<float>  triangleLimit;
+  ofParameter<float>  scaleFactor;
   ofParameter<ofFloatColor>  color;
   
   ofParameterGroup    connectLinesGroup;

@@ -15,6 +15,8 @@ MainGUI::MainGUI()
 
 void MainGUI::init()
 {
+  canChangePoints       = true;
+  timerCanChangePoints  = 0;
   readXMLSettings();
   guiVisible = false;
   timelineVisible = true;
@@ -39,9 +41,6 @@ void MainGUI::readXMLSettings()
   outputSize.y = xml.getValue("controller:output:height", 0);
   host = xml.getValue("controller:output:host", "");
   port = xml.getValue("controller:output:port", 0);
-  cout << outputSize << endl;
-  cout << host << endl;
-  cout << port << endl;
 }
 
 void MainGUI::initOSC()
@@ -56,7 +55,7 @@ void MainGUI::draw()
   drawArea.width = ofGetWindowWidth();
   drawArea.height = drawArea.width/drawProp;
   drawArea.x = 0;
-  drawArea.y = (ofGetWindowHeight() - drawArea.height)*.5;
+  drawArea.y = (ofGetWindowHeight() - drawArea.height);
   ofRect(drawArea);
   ofPopStyle();
   
@@ -107,13 +106,20 @@ void MainGUI::drawPoints()
 
 void MainGUI::loadFromSVG(int id)
 {
-  clear();
-  VectorDraw::loadFromSVG(this, id, "svg/", outputSize);
+//  if(!canChangePoints)
+  //  return;
+  if(addToDraw == 0)
+    clear();
+  PolyLineException* exception = new PolyLineException();
+  VectorDraw::loadFromSVG(this, id, "svg/", outputSize, exception);
+  delete exception;
+  exception = NULL;
 }
 
 void MainGUI::loadGeometric()
 {
-  clear();
+  if(addToDraw == 0)
+    clear();
   GeometricDraw::loadGeometric(this, geomId, geomParam1, geomParam2, outputSize);
 }
 
@@ -209,6 +215,8 @@ void MainGUI::update()
     sameSpring = timeline.getValue("Same Spring");
     sameFriction = timeline.getValue("Same Friction");
     repulsionForce = timeline.getValue("Repulson Force");
+    scaleFactor = timeline.getValue("Scale");
+    audioInvertCoefficent = timeline.getValue("Audio Invert Coefficent");
     
     
     minPerimeter = timeline.getValue("Min Perimeter");
@@ -222,13 +230,22 @@ void MainGUI::update()
   syncMovementGUI.update();
   syncShaderGUI.update();
   ofSetWindowTitle(ofToString(ofGetFrameRate()));
+  if(!canChangePoints)
+  {
+    timerCanChangePoints++; 
+    if(timerCanChangePoints > 5)
+    {
+      canChangePoints = true;
+      timerCanChangePoints = 0;
+    }
+  }
 }
 
 void MainGUI::initTimeline()
 {
   timeline.setup();
   timeline.setSpacebarTogglePlay(false);
-  timeline.setDurationInSeconds(97);
+  timeline.setDurationInSeconds(76);
   timeline.setLoopType(OF_LOOP_NORMAL);
   timeline.setHeight(200);
   timeline.addCurves("Color r");
@@ -238,6 +255,8 @@ void MainGUI::initTimeline()
   timeline.addCurves("Same Spring");
   timeline.addCurves("Same Friction");
   timeline.addCurves("Repulson Force");
+  timeline.addCurves("Scale");
+  timeline.addCurves("Audio Invert Coefficent",ofRange(0,2));
   
   timeline.addCurves("Min Perimeter");
   timeline.addCurves("Max Perimeter");
@@ -247,6 +266,34 @@ void MainGUI::initTimeline()
   
   timeline.addFlags("Change Command");
   ofAddListener(timeline.events().bangFired, this, &MainGUI::receivedBang);
+  ofAddListener(timeline.events().playbackLooped, this, &MainGUI::playbackLoopedHandler);
+  ofAddListener(timeline.events().playbackStarted, this, &MainGUI::playbackStartedHandler);
+  ofAddListener(timeline.events().playbackEnded, this, &MainGUI::playbackEndedHandler);
+}
+
+void MainGUI::playbackStartedHandler(ofxTLPlaybackEventArgs& event)
+{
+  sendPlaybackState();
+}
+
+void MainGUI::playbackEndedHandler(ofxTLPlaybackEventArgs& event)
+{
+  sendPlaybackState();
+}
+
+void MainGUI::playbackLoopedHandler(ofxTLPlaybackEventArgs& event)
+{
+  ofxOscMessage message;
+  message.setAddress("/Reset_Track");
+  sender.sendMessage(message);
+}
+
+void MainGUI::sendPlaybackState()
+{
+  ofxOscMessage message;
+  message.setAddress("/Play");
+  message.addIntArg(timeline.getIsPlaying());
+  sender.sendMessage(message);
 }
 
 void MainGUI::receivedBang(ofxTLBangEventArgs& bang)
@@ -260,6 +307,14 @@ void MainGUI::receivedBang(ofxTLBangEventArgs& bang)
   if(bang.flag == "DrawFalse")
   {
     directDraw = false;
+  }
+  if(bang.flag == "AddToDraw")
+  {
+    addToDraw = true;
+  }
+  if(bang.flag == "AddToDrawFalse")
+  {
+    addToDraw = false;
   }
   if(bang.flag == "Clear")
   {
@@ -275,6 +330,25 @@ void MainGUI::receivedBang(ofxTLBangEventArgs& bang)
     bool fakeBool = true;
     vectorId = ofToInt(ofSplitString(bang.flag, "LoadVector")[1]);
     loadSvgChanged(fakeBool);
+  }
+  int fadeInPos = bang.flag.find("FadeIn");
+  int overlayId = -1;
+  ofxOscMessage fadeInOutMessage;
+  if(fadeInPos >= 0)
+  {
+    overlayId = ofToInt(ofSplitString(bang.flag, "FadeIn")[1]);
+    fadeInOutMessage.setAddress("/FadeIn");
+  }
+  int fadeOutPos = bang.flag.find("FadeOut");
+  if(fadeOutPos >= 0)
+  {
+    overlayId = ofToInt(ofSplitString(bang.flag, "FadeOut")[1]);
+    fadeInOutMessage.setAddress("/FadeOut");
+  }
+  if(fadeOutPos >= 0 || fadeInPos >= 0)
+  {
+    fadeInOutMessage.addIntArg(overlayId);
+    sender.sendMessage(fadeInOutMessage);
   }
   if(bang.flag == "DrawPoint")
   {
@@ -320,11 +394,13 @@ void MainGUI::initGeneralGUI()
   generalGUI.add(visualFrameRate.setup("Visual Framerate",""));
   generalGUI.add(togglePlayPauseTimeline.set("Play/Pause Timeline",false));
   volumeGroup.setName("Volume");
+  volumeGroup.add(audioInvertCoefficent.set("Audio Invert Coefficent", 1, 0, 2));
   volumeGroup.add(manualInvert.set("Manual Invert", false));
   volumeGroup.add(forceInvert.set("Force Invert", false));
   volumeGroup.add(volumeInvertLimit.set("Volume Invert Limit", 0, 0, 1));
   generalGUI.add(volumeGroup);
   toggleFullscreen.addListener(this, &MainGUI::toggleFullscreenChanged);
+  audioInvertCoefficent.addListener(this, &MainGUI::audioInvertCoefficentChanged);
   togglePlayPauseTimeline.addListener(this, &MainGUI::togglePlayPauseTimelineChanged);
   syncGeneralGUI.setup((ofParameterGroup&)generalGUI.getParameter(),6660, host,port);
 }
@@ -334,6 +410,7 @@ void MainGUI::initGraphicGUI()
   graphicGUI.setup("Graphic");
   graphicGUI.setPosition(ofPoint(210,guiPosY));
   graphicGUI.add(directDraw.setup("Direct draw", true));
+  graphicGUI.add(addToDraw.setup("Add to draw", false));
   graphicGUI.add(bClear.setup("Clear"));
   graphicGUI.add(clearAll.setup("Clear All"));
   vectorGroup.setName("Vector");
@@ -353,6 +430,15 @@ void MainGUI::initGraphicGUI()
   bClear.addListener(this, &MainGUI::clearChanged);
   clearAll.addListener(this, &MainGUI::clearAllChanged);
   directDraw.addListener(this, &MainGUI::directDrawChanged);
+  addToDraw.addListener(this, &MainGUI::addToDrawChanged);
+}
+                  
+void MainGUI::audioInvertCoefficentChanged(float & value)
+  {
+    ofxOscMessage message;
+    message.setAddress("/General/Audio_Invert_Coefficent");
+    message.addFloatArg(value);
+    sender.sendMessage(message);
 }
 
 void MainGUI::directDrawChanged(bool & value)
@@ -361,17 +447,28 @@ void MainGUI::directDrawChanged(bool & value)
     sendManyPoints();
 }
 
+void MainGUI::addToDrawChanged(bool & value)
+{
+  addToDraw = value;
+}
+
 void MainGUI::loadSvgChanged(bool & value)
 {
   loadVector = false;
-  loadFromSVG(vectorId);
-  if(directDraw)
-    sendManyPoints();
+  if(canChangePoints)
+  {
+    loadFromSVG(vectorId);
+    if(directDraw)
+    {
+      canChangePoints = false;
+      sendManyPoints();
+    }
+  }
 }
 
 void MainGUI::vectorChanged(int & value)
 {
-  if(!directDraw)
+  if(!directDraw&&canChangePoints)
     loadFromSVG(value);
 }
 
@@ -379,7 +476,7 @@ void MainGUI::loadGeomChanged(bool & value)
 {
   loadGeom = false;
   loadGeometric();
-  if(directDraw)
+  if(directDraw&&canChangePoints)
     sendManyPoints();
 }
 
@@ -399,6 +496,7 @@ void MainGUI::togglePlayPauseTimelineChanged(bool & value)
 {
   togglePlayPauseTimeline = false;
   timeline.togglePlay();
+  sendPlaybackState();
 }
 
 void MainGUI::clearChanged()
@@ -412,6 +510,12 @@ void MainGUI::sendGeometric()
 
 void MainGUI::sendManyPoints()
 {
+  if(timerCanChangePoints != 0)
+  {
+    return;
+  }
+  timerCanChangePoints = 1;
+  canChangePoints = false;
   ofxOscMessage message;
   message.clear();
   message.setAddress( "/loadShape" );
@@ -428,6 +532,7 @@ void MainGUI::sendManyPoints()
       sender.sendMessage(message);
       cont++;
       message.clear();
+      // Controllare che il load SVG non venga richiamto più volte
       message.setAddress( "/addPoint" );
       int pointToSend = (points.size() - a);
       if(pointToSend >= 301)
@@ -463,6 +568,7 @@ void MainGUI::initEffecGUI()
   effecGUI.add(drawTriangle.setup("Draw triangle", false));
   effecGUI.add(connectPrevPoint.setup("Connect to prev point", false));
   effecGUI.add(connectPoints.setup("Connect points", false));
+  effecGUI.add(scaleFactor.set("Scale Factor", 0, 0, 1));
   triangleGroup.setName("Triangles");
   triangleGroup.add(sameColorTriangle.set("Same Color Triangles", true));
   triangleGroup.add(minPerimeter.set("Min Perimeter", 0, 0, 1));
@@ -479,9 +585,9 @@ void MainGUI::initEffecGUI()
   maxPerimeter.addListener(this, &MainGUI::maxPerimeterChanged);
   minLineDistance.addListener(this, &MainGUI::minLineDistanceChanged);
   maxLineDistance.addListener(this, &MainGUI::maxLineDistanceChanged);
+  scaleFactor.addListener(this, &MainGUI::scaleFactorChanged);
   syncEffecGUI.setup((ofParameterGroup&)effecGUI.getParameter(),6662, host,port);
 }
-
 
 void MainGUI::colorChanged(ofFloatColor & newColor)
 {
@@ -510,92 +616,66 @@ void MainGUI::initMovementGUI()
   syncMovementGUI.setup((ofParameterGroup&)movementGUI.getParameter(),6663,host,port);
 }
 
+void MainGUI::sendFloatValue(string address, float value)
+{
+  ofxOscMessage message;
+  message.setAddress(address);
+  message.addFloatArg(value);
+  sender.sendMessage(message);
+}
+
 void MainGUI::particleSpeedChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Movement/Particle_Speed");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Movement/Particle_Speed", value);
 }
 
 void MainGUI::sameSpringChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Movement/Same_Spring");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Movement/Same_Spring", value);
 }
 
 void MainGUI::sameFrictionChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Movement/Same_Friction");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Movement/Same_Friction", value);
 }
 
 void MainGUI::repulsionForceChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Movement/Repulsion_Force");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Movement/Repulsion_Force", value);
 }
 
 void MainGUI::minPerimeterChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Effect/Triangles/Min_Perimeter");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Effect/Triangles/Min_Perimeter", value);
 }
 
 void MainGUI::maxPerimeterChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Effect/Triangles/Max_Perimeter");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Effect/Triangles/Max_Perimeter", value);
 }
 
 void MainGUI::minLineDistanceChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Effect/Connect_Lines/Min_Line_Distance");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Effect/Connect_Lines/Min_Line_Distance", value);
 }
 
 void MainGUI::maxLineDistanceChanged(float & value)
 {
   if(timeline.getIsPlaying())
-  {
-    ofxOscMessage message;
-    message.setAddress("/Effect/Connect_Lines/Max_Line_Distance");
-    message.addFloatArg(value);
-    sender.sendMessage(message);
-  }
+    sendFloatValue("/Effect/Connect_Lines/Max_Line_Distance", value);
+}
+
+void MainGUI::scaleFactorChanged(float & value)
+{
+  if(timeline.getIsPlaying())
+    sendFloatValue("/Effect/Scale_Factor", value);
 }
 
 void MainGUI::initShaderGUI()
