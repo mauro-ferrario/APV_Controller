@@ -9,7 +9,7 @@
 #include "VectorDraw.h"
 #include "MainGUI.h"
 
-void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outputSize)
+void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outputSize, PolyLineException* exception, bool addDirtyPoints)
 {
   string url = loadSVGAddress(path)[id];
   ofPoint tempPoint;
@@ -23,6 +23,7 @@ void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outp
   mySVG = new ofxSVG();
   mySVG->load(url);
   ofPolyline newPoly;
+  
   ofPath newPath;
   float totPath = mySVG->getNumPath();
   for(int a = 0; a < totPath; a++)
@@ -32,26 +33,32 @@ void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outp
     for(int i =0; i < totOutline; i++)
     {
       ofPolyline tempPolyline = tempPath.getOutline()[i];
+      
+      if(exception)
+      {
+        exception->applyException(tempPolyline, url);
+      }
+      
       int totVertex = tempPolyline.getVertices().size();
       for(int z = 0; z < totVertex;z++)
       {
-        if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x > max.x)
-          max.x = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x;
-        else if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y > max.y)
-          max.y = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y;
+        if(tempPolyline.getVertices()[z].x > max.x)
+          max.x = tempPolyline.getVertices()[z].x;
+        else if(tempPolyline.getVertices()[z].y > max.y)
+          max.y = tempPolyline.getVertices()[z].y;
         
-        if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x < min.x)
-          min.x = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].x;
-        else if(mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y < min.y)
-          min.y = mySVG->getPathAt(a).getOutline()[i].getVertices()[z].y;
-        newPoly.addVertex(mySVG->getPathAt(a).getOutline()[i].getVertices()[z]);
+        if(tempPolyline.getVertices()[z].x < min.x)
+          min.x = tempPolyline.getVertices()[z].x;
+        else if(tempPolyline.getVertices()[z].y < min.y)
+          min.y = tempPolyline.getVertices()[z].y;
+        newPoly.addVertex(tempPolyline.getVertices()[z]);
       }
     }
   }
+  exception = NULL;
   ofPoint newPosition;
   newPosition.x = (outputSize.x - (max.x - min.x)) * .5;
   newPosition.y = (outputSize.y - (max.y - min.y)) * .5;
-  newPoly.simplify();
   for(int a = 0; a <  newPoly.getVertices().size(); a++)
   {
     tempPoint.x = newPoly[a].x + newPosition.x;

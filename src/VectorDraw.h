@@ -11,13 +11,14 @@
 
 #include "ofMain.h"
 #include "ofxSvg.h"
+#include "PolyLineException.h"
 
 class MainGUI;
 
 class VectorDraw
 {
 public:
-  static void                 loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outputSize);
+  static void                 loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outputSize, PolyLineException* exception, bool addDirtyPoints = true);
   static vector<string>       loadSVGAddress(string path);
   static int                  getTotSvgs(string path);
 };
