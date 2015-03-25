@@ -1,22 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Generator: Adobe Illustrator 16.0.0, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
-	 width="800px" height="600px" viewBox="0 0 800 600" enable-background="new 0 0 800 600" xml:space="preserve">
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="127.146,35.472 82.962,86.899 128.595,132.532 
-	128.595,106.456 89.964,87.382 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="43.487,132.532 87.671,81.105 42.038,35.472 
-	42.038,61.548 80.669,80.622 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="79.236,2 85.81,88.768 168.633,88.768 144.969,65.104 
-	92.602,82.852 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="91.397,166.004 84.824,79.236 2,79.236 25.664,102.9 
-	78.031,85.152 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="52.968,28.699 87.294,87.168 145.255,58.793 
-	120.588,50.34 90.021,80.701 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="117.665,139.305 83.339,80.836 25.377,109.21 
-	50.045,117.664 80.612,87.303 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="5.772,63.17 89.985,85.081 116.835,6.73 86.777,21.444 
-	86.59,76.737 "/>
-<polygon fill="#FFFFFF" stroke="#000000" stroke-miterlimit="10" points="164.861,104.833 80.648,82.923 53.798,161.274 
-	83.856,146.56 84.042,91.267 "/>
+<svg version="1.1" id="Capa_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 width="650.471px" height="650.472px" viewBox="0 0 650.471 650.472" enable-background="new 0 0 650.471 650.472"
+	 xml:space="preserve">
+<g>
+	<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M0,209.849l73.245-102.229L146.49,5.392h25.388h25.388v97.285v97.286
+		h21.569h21.569v18.873v18.873h-21.569h-21.569v42.464v42.464h-21.793H153.68v-42.464v-42.464H76.84H0v-13.93V209.849z
+		 M153.68,199.963l0.898-73.469l0.898-73.47h-0.449h-0.449l-52.8,73.021l-52.8,73.021v0.449v0.449h52.351H153.68z"/>
+	<path fill="none" stroke="#000000" stroke-miterlimit="10" d="M286.686,163.565C286.686,72.346,314.096,0,398.574,0
+		c84.929,0,112.34,72.346,112.34,163.565c0,91.669-27.411,164.465-112.34,164.465C314.096,328.031,286.686,255.234,286.686,163.565z
+		 M465.528,163.565c0-68.751-14.828-122.674-66.953-122.674c-51.676,0-66.504,53.922-66.504,122.674
+		c0,69.201,14.828,123.573,66.504,123.573C450.699,287.139,465.528,232.767,465.528,163.565z"/>
+</g>
 </svg>

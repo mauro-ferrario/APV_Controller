@@ -116,3 +116,7 @@ Desktop.ini
 *.make
 
 bin/data/.gitkeep
+
+bin/data/*
+
+*.svg

@@ -1,92 +1,86 @@
 <positions>
+    <element name="Audio Invert Coefficent">
+        <x>0.000000000</x>
+        <y>244.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
+    </element>
     <element name="Change Command">
         <x>0.000000000</x>
-        <y>1143.000000000</y>
-        <width>1050.000000000</width>
-        <height>196.000000000</height>
-    </element>
-    <element name="Change Shape">
-        <x>0.000000000</x>
-        <y>289.000000000</y>
-        <width>1280.000000000</width>
-        <height>344.000000000</height>
+        <y>364.000000000</y>
+        <width>913.000000000</width>
+        <height>95.000000000</height>
     </element>
     <element name="Color b">
         <x>0.000000000</x>
-        <y>227.000000000</y>
-        <width>1050.000000000</width>
-        <height>73.000000000</height>
+        <y>100.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Color g">
         <x>0.000000000</x>
-        <y>142.000000000</y>
-        <width>1050.000000000</width>
-        <height>61.000000000</height>
+        <y>76.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Color r">
         <x>0.000000000</x>
         <y>52.000000000</y>
-        <width>1050.000000000</width>
-        <height>66.000000000</height>
-    </element>
-    <element name="Flags">
-        <x>0.000000000</x>
-        <y>403.000000000</y>
-        <width>1280.000000000</width>
-        <height>40.000000000</height>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Max Line Distance">
         <x>0.000000000</x>
-        <y>1027.000000000</y>
-        <width>1050.000000000</width>
-        <height>92.000000000</height>
+        <y>340.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Max Perimeter">
         <x>0.000000000</x>
-        <y>805.000000000</y>
-        <width>1050.000000000</width>
-        <height>81.000000000</height>
+        <y>292.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Min Line Distance">
         <x>0.000000000</x>
-        <y>910.000000000</y>
-        <width>1050.000000000</width>
-        <height>93.000000000</height>
+        <y>316.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Min Perimeter">
         <x>0.000000000</x>
-        <y>721.000000000</y>
-        <width>1050.000000000</width>
-        <height>60.000000000</height>
+        <y>268.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Particle Speed">
         <x>0.000000000</x>
-        <y>324.000000000</y>
-        <width>1050.000000000</width>
-        <height>84.000000000</height>
+        <y>124.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Repulson Force">
         <x>0.000000000</x>
-        <y>632.000000000</y>
-        <width>1050.000000000</width>
-        <height>65.000000000</height>
+        <y>196.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Same Friction">
         <x>0.000000000</x>
-        <y>551.000000000</y>
-        <width>1050.000000000</width>
-        <height>57.000000000</height>
+        <y>172.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
     <element name="Same Spring">
         <x>0.000000000</x>
-        <y>432.000000000</y>
-        <width>1050.000000000</width>
-        <height>95.000000000</height>
+        <y>148.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
-    <element name="Test">
+    <element name="Scale">
         <x>0.000000000</x>
-        <y>284.000000000</y>
-        <width>1280.000000000</width>
-        <height>95.000000000</height>
+        <y>220.000000000</y>
+        <width>913.000000000</width>
+        <height>0.000000000</height>
     </element>
 </positions>
