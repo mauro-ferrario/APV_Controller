@@ -22,6 +22,8 @@
 #include "VectorDraw.h"
 #include "ofxXmlSettings.h"
 #include "PolyLineException.h"
+#include "GoofyFlowField.h"
+#include "GoofyPerlinNoise.h"
 
 class MainGUI
 {
@@ -164,6 +166,22 @@ public:
   ofParameter<float>  sameFriction;
   ofParameter<float>  repulsionForce;
   ofParameter<bool>   repulsionFromTarget;
+  ofParameter<bool>   followFlow;
+  
+  GoofyFlowField      fakeFlowField;
+  void                resetFlowChanged(bool & value);
+  void                flowForceChanged(float & value);
+  void                followFlowChanged(bool & value);
+  
+  GoofyPerlinNoise    fakePerlin;
+  ofParameter<bool>   enablePerlin;
+  void                enablePerlinChanged(bool & value);
+  void                resXPerlinChanged(float & value);
+  void                resYPerlinChanged(float & value);
+  void                speedPerlinChanged(float & value);
+  void                forcePerlinChanged(float & value);
+  
+  
   
   // shaderGUI
   ofParameterGroup    pixelShader;

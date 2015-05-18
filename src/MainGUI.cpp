@@ -602,6 +602,7 @@ void MainGUI::colorChanged(ofFloatColor & newColor)
 
 void MainGUI::initMovementGUI()
 {
+  fakeFlowField.init(100, 100, 10);
   movementGUI.setup("Movement");
   movementGUI.setPosition(ofPoint(630,guiPosY));
   movementGUI.add(particleSpeed.set("Particle Speed", 0, 0, 1));
@@ -609,11 +610,57 @@ void MainGUI::initMovementGUI()
   movementGUI.add(sameFriction.set("Same Friction", 0, 0, 1));
   movementGUI.add(repulsionForce.set("Repulsion Force", 0, 0, 1));
   movementGUI.add(repulsionFromTarget.set("Repulsion From Target", false));
+  movementGUI.add(followFlow.set("Follow Flow", false));
+  movementGUI.add(enablePerlin.set("Enable Perlin", false));
+  movementGUI.add(*fakeFlowField.getParameterGroup());
+  movementGUI.add(*fakePerlin.getParameterGroup());
   particleSpeed.addListener(this, &MainGUI::particleSpeedChanged);
   sameSpring.addListener(this, &MainGUI::sameSpringChanged);
   sameFriction.addListener(this, &MainGUI::sameFrictionChanged);
   repulsionForce.addListener(this, &MainGUI::repulsionForceChanged);
   syncMovementGUI.setup((ofParameterGroup&)movementGUI.getParameter(),6663,host,port);
+  fakeFlowField.bResetFlow.addListener(this, &MainGUI::resetFlowChanged);
+  fakeFlowField.force.addListener(this, &MainGUI::flowForceChanged);
+  followFlow.addListener(this, &MainGUI::followFlowChanged);
+  enablePerlin.addListener(this, &MainGUI::enablePerlinChanged);
+  
+  fakePerlin.resX.addListener(this, &MainGUI::resXPerlinChanged);
+  fakePerlin.resY.addListener(this, &MainGUI::resYPerlinChanged);
+  fakePerlin.speed.addListener(this, &MainGUI::speedPerlinChanged);
+  fakePerlin.force.addListener(this, &MainGUI::forcePerlinChanged);
+}
+
+void MainGUI::enablePerlinChanged(bool & value)
+{
+  ofxOscMessage message;
+  message.clear();
+  message.setAddress( "/enablePerlin" );
+  message.addIntArg(value);
+  sender.sendMessage(message);
+}
+
+void MainGUI::resetFlowChanged(bool & value)
+{
+  ofxOscMessage message;
+  message.clear();
+  message.setAddress( "/resetFlow" );
+  sender.sendMessage(message);
+  fakeFlowField.bResetFlow = false;
+}
+
+void MainGUI::followFlowChanged(bool & value)
+{
+  ofxOscMessage message;
+  message.clear();
+  message.setAddress( "/FollowFlow");
+  message.addIntArg(value);
+  sender.sendMessage(message);
+}
+
+void MainGUI::flowForceChanged(float & value)
+{
+  //if(timeline.getIsPlaying())
+  sendFloatValue("/Flow/force", value);
 }
 
 void MainGUI::sendFloatValue(string address, float value)
@@ -622,6 +669,26 @@ void MainGUI::sendFloatValue(string address, float value)
   message.setAddress(address);
   message.addFloatArg(value);
   sender.sendMessage(message);
+}
+
+void MainGUI::resXPerlinChanged(float & value)
+{
+  sendFloatValue("/Movement/Perlin/ResX", value);
+}
+
+void MainGUI::resYPerlinChanged(float & value)
+{
+  sendFloatValue("/Movement/Perlin/ResY", value);
+}
+
+void MainGUI::speedPerlinChanged(float & value)
+{
+  sendFloatValue("/Movement/Perlin/Speed", value);
+}
+
+void MainGUI::forcePerlinChanged(float & value)
+{
+ sendFloatValue("/Movement/Perlin/Force", value);
 }
 
 void MainGUI::particleSpeedChanged(float & value)
