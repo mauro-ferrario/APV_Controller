@@ -39,6 +39,8 @@ void VectorDraw::loadFromSVG(MainGUI* mainGUI, int id, string path, ofVec2f outp
         exception->applyException(tempPolyline, url);
       }
       
+      tempPolyline.simplify();
+      
       int totVertex = tempPolyline.getVertices().size();
       for(int z = 0; z < totVertex;z++)
       {
