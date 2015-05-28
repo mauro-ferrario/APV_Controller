@@ -19,9 +19,11 @@ void MainGUI::init()
   timerCanChangePoints  = 0;
   readXMLSettings();
   guiVisible = false;
+#ifdef USE_TIMELINE
   timelineVisible = true;
   initTimeline();
   guiPosY = timeline.getHeight()+10;
+#endif
   initGeneralGUI();
   initGraphicGUI();
   initEffecGUI();
@@ -31,6 +33,50 @@ void MainGUI::init()
   initOSC();
   directDraw      = true;
   drawProp = outputSize.x/outputSize.y;
+  
+  cleanPointers();
+  
+  mapToFloatValue["/midi/cc16/1"] = &minPerimeter;
+  mapToFloatValue["/midi/cc17/1"] = &maxPerimeter;
+  mapToFloatValue["/midi/cc18/1"] = &triangleLimit;
+  
+  mapToFloatValue["/midi/cc19/1"] = &minLineDistance;
+  mapToFloatValue["/midi/cc20/1"] = &maxLineDistance;
+  
+  mapToFloatValue["/midi/cc21/1"] = &oscRed;
+  mapToFloatValue["/midi/cc22/1"] = &oscGreen;
+  mapToFloatValue["/midi/cc23/1"] = &oscBlue;
+  
+  
+  mapToFloatValue["/midi/cc0/1"] = &particleSpeed;
+  mapToFloatValue["/midi/cc1/1"] = &sameSpring;
+  mapToFloatValue["/midi/cc2/1"] = &sameFriction;
+  mapToFloatValue["/midi/cc3/1"] = &repulsionForce;
+  mapToFloatValue["/midi/cc6/1"] = &fakeFlowField.force;
+  mapToFloatValue["/midi/cc7/1"] = &fakePerlin.force;
+}
+
+void MainGUI::cleanPointers()
+{
+  
+  mapToFloatValue["/midi/cc16/1"] = NULL;
+  mapToFloatValue["/midi/cc17/1"] = NULL;
+  mapToFloatValue["/midi/cc18/1"] = NULL;
+  
+  mapToFloatValue["/midi/cc19/1"] = NULL;
+  mapToFloatValue["/midi/cc20/1"] = NULL;
+  
+  mapToFloatValue["/midi/cc21/1"] = NULL;
+  mapToFloatValue["/midi/cc22/1"] = NULL;
+  mapToFloatValue["/midi/cc23/1"] = NULL;
+  
+  mapToFloatValue["/midi/cc0/1"] = NULL;
+  mapToFloatValue["/midi/cc1/1"] = NULL;
+  mapToFloatValue["/midi/cc2/1"] = NULL;
+  mapToFloatValue["/midi/cc3/1"] = NULL;
+  
+  mapToFloatValue["/midi/cc6/1"] = NULL;
+  mapToFloatValue["/midi/cc7/1"] = NULL;
 }
 
 void MainGUI::readXMLSettings()
@@ -46,6 +92,7 @@ void MainGUI::readXMLSettings()
 void MainGUI::initOSC()
 {
   sender.setup(host, port);
+  receiver.setup(6665);
 }
 
 void MainGUI::draw()
@@ -61,6 +108,7 @@ void MainGUI::draw()
   
   ofSetColor(255);
   drawPoints();
+#ifdef USE_TIMELINE
   if(timelineVisible)
   {
     ofPushStyle();
@@ -69,6 +117,7 @@ void MainGUI::draw()
     ofPopStyle();
     timeline.draw();
   }
+#endif
   if(guiVisible)
   {
     generalGUI.draw();
@@ -88,7 +137,7 @@ void MainGUI::drawPoints()
   ofVec2f offset;
   offset.x = 0;
   offset.y = drawArea.y;
-  ofTranslate(offset);
+  //ofTranslate(offset);
   
   int cont = 0;
   while(it != points.end())
@@ -96,7 +145,8 @@ void MainGUI::drawPoints()
     if(cont > 0)
     {
       prevIt = it - 1;
-      ofLine((*it)->x/outputSize.x*drawArea.width, (*it)->y/outputSize.y*drawArea.height, (*prevIt)->x/outputSize.x*drawArea.width, (*prevIt)->y/outputSize.y*drawArea.height);
+//      ofLine((*it)->x/outputSize.x*drawArea.width, (*it)->y/outputSize.y*drawArea.height, (*prevIt)->x/outputSize.x*drawArea.width, (*prevIt)->y/outputSize.y*drawArea.height);
+      ofLine((*it)->x, (*it)->y, (*prevIt)->x, (*prevIt)->y);
     }
     cont++;
     it++;
@@ -138,10 +188,12 @@ void MainGUI::keyReleased (ofKeyEventArgs &e)
   char key = e.key;
   if(e.key == OF_KEY_UP)
     guiVisible = !guiVisible;
+#ifdef USE_TIMELINE
   if(e.key == OF_KEY_DOWN)
     timelineVisible = !timelineVisible;
   if(e.key == ' ')
     timeline.togglePlay();
+#endif
 }
 
 void MainGUI::mouseReleased(ofMouseEventArgs &e)
@@ -155,8 +207,12 @@ void MainGUI::mousePressed(ofMouseEventArgs &e)
 #ifdef FREE_DRAW_MODE
 void MainGUI::mouseDragged(ofMouseEventArgs &e)
 {
-  if(guiVisible||timelineVisible)
+  if(guiVisible)
     return;
+#ifdef USE_TIMELINE
+  if(timelineVisible)
+    return;
+#endif
   int x = e.x;
   int y = e.y;
   addSinglePoint(x, y);
@@ -203,6 +259,31 @@ void MainGUI::sendSinglePoint(float x, float y)
 
 void MainGUI::update()
 {
+  
+  
+  while(receiver.hasWaitingMessages())
+  {
+    ofxOscMessage message;
+    receiver.getNextMessage(&message);
+    string messageAddress = message.getAddress();
+    cout << messageAddress << endl;
+    if(messageAddress == "/framerate")
+    {
+      visualFrameRate = ofToString(message.getArgAsFloat(0));
+    }
+    
+    if(mapToFloatValue[messageAddress])
+    {
+      *mapToFloatValue[messageAddress] = message.getArgAsFloat(0);
+      if(messageAddress == "/midi/cc21/1" || messageAddress == "/midi/cc22/1" || messageAddress == "/midi/cc23/1")
+      {
+        ofColor newColor = ofColor(oscRed*255, oscGreen*255, oscBlue*255);
+        color = newColor;
+      }
+    }
+  }
+  
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
   {
     ofColor newColor;
@@ -214,7 +295,7 @@ void MainGUI::update()
     particleSpeed = timeline.getValue("Particle Speed");
     sameSpring = timeline.getValue("Same Spring");
     sameFriction = timeline.getValue("Same Friction");
-    repulsionForce = timeline.getValue("Repulson Force");
+    repulsionForce = timeline.getValue("Repulsion Force");
     scaleFactor = timeline.getValue("Scale");
     audioInvertCoefficent = timeline.getValue("Audio Invert Coefficent");
     
@@ -224,12 +305,12 @@ void MainGUI::update()
     minLineDistance = timeline.getValue("Min Line Distance");
     maxLineDistance = timeline.getValue("Max Line Distance");
   }
+#endif
   syncGeneralGUI.update();
   //syncGraphiclGUI.update();
   syncEffecGUI.update();
   syncMovementGUI.update();
   syncShaderGUI.update();
-  ofSetWindowTitle(ofToString(ofGetFrameRate()));
   if(!canChangePoints)
   {
     timerCanChangePoints++; 
@@ -241,6 +322,7 @@ void MainGUI::update()
   }
 }
 
+#ifdef USE_TIMELINE
 void MainGUI::initTimeline()
 {
   timeline.setup();
@@ -254,7 +336,7 @@ void MainGUI::initTimeline()
   timeline.addCurves("Particle Speed");
   timeline.addCurves("Same Spring");
   timeline.addCurves("Same Friction");
-  timeline.addCurves("Repulson Force");
+  timeline.addCurves("Repulsion Force");
   timeline.addCurves("Scale");
   timeline.addCurves("Audio Invert Coefficent",ofRange(0,2));
   
@@ -383,6 +465,7 @@ void MainGUI::receivedBang(ofxTLBangEventArgs& bang)
     drawTriangle = false;
   }
 }
+#endif
 
 void MainGUI::initGeneralGUI()
 {
@@ -392,16 +475,20 @@ void MainGUI::initGeneralGUI()
   generalGUI.add(toggleFullscreen.set("Fullscreen", true));
   generalGUI.add(secureLimit.setup("Secure Limit",true));
   generalGUI.add(visualFrameRate.setup("Visual Framerate",""));
+#ifdef USE_TIMELINE
   generalGUI.add(togglePlayPauseTimeline.set("Play/Pause Timeline",false));
+#endif
   volumeGroup.setName("Volume");
   volumeGroup.add(audioInvertCoefficent.set("Audio Invert Coefficent", 1, 0, 2));
   volumeGroup.add(manualInvert.set("Manual Invert", false));
   volumeGroup.add(forceInvert.set("Force Invert", false));
-  volumeGroup.add(volumeInvertLimit.set("Volume Invert Limit", 0, 0, 1));
+  volumeGroup.add(volumeLevel.set("Volume Level", 1, 0, 5));
   generalGUI.add(volumeGroup);
   toggleFullscreen.addListener(this, &MainGUI::toggleFullscreenChanged);
   audioInvertCoefficent.addListener(this, &MainGUI::audioInvertCoefficentChanged);
+#ifdef USE_TIMELINE
   togglePlayPauseTimeline.addListener(this, &MainGUI::togglePlayPauseTimelineChanged);
+#endif
   syncGeneralGUI.setup((ofParameterGroup&)generalGUI.getParameter(),6660, host,port);
 }
 
@@ -492,12 +579,14 @@ void MainGUI::toggleFullscreenChanged(bool & value)
   ofToggleFullscreen();
 }
 
+#ifdef USE_TIMELINE
 void MainGUI::togglePlayPauseTimelineChanged(bool & value)
 {
   togglePlayPauseTimeline = false;
   timeline.togglePlay();
   sendPlaybackState();
 }
+#endif
 
 void MainGUI::clearChanged()
 {
@@ -591,13 +680,17 @@ void MainGUI::initEffecGUI()
 
 void MainGUI::colorChanged(ofFloatColor & newColor)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
   {
+#endif
     ofxOscMessage message;
     message.setAddress("/Effect/Triangles/Color");
     message.addStringArg(ofToString(newColor.r) +", "+ofToString(newColor.g)+ ","+ofToString(newColor.b)+","+ofToString(newColor.a));
     sender.sendMessage(message);
+#ifdef USE_TIMELINE
   }
+#endif
 }
 
 void MainGUI::initMovementGUI()
@@ -614,6 +707,7 @@ void MainGUI::initMovementGUI()
   movementGUI.add(enablePerlin.set("Enable Perlin", false));
   movementGUI.add(*fakeFlowField.getParameterGroup());
   movementGUI.add(*fakePerlin.getParameterGroup());
+  movementGUI.add(*getWindGroup());
   particleSpeed.addListener(this, &MainGUI::particleSpeedChanged);
   sameSpring.addListener(this, &MainGUI::sameSpringChanged);
   sameFriction.addListener(this, &MainGUI::sameFrictionChanged);
@@ -628,6 +722,42 @@ void MainGUI::initMovementGUI()
   fakePerlin.resY.addListener(this, &MainGUI::resYPerlinChanged);
   fakePerlin.speed.addListener(this, &MainGUI::speedPerlinChanged);
   fakePerlin.force.addListener(this, &MainGUI::forcePerlinChanged);
+}
+
+ofParameterGroup* MainGUI::getWindGroup()
+{
+  if(!windParams)
+  {
+    windParams = new ofParameterGroup();
+  }
+  if(windParams->getName() == "")
+  {
+    windParams->setName("Wind");
+    windParams->add(wind.set("Wind",ofVec2f(0,0),ofVec2f(-50,-50),ofVec2f(50,50)));
+    windParams->add(toggleWind.set("Wind actived", false));
+    toggleWind.addListener(this, &MainGUI::toggleWindChanged);
+    wind.addListener(this, &MainGUI::windChanged);
+  }
+  return windParams;
+}
+
+void MainGUI::windChanged(ofVec2f & value)
+{
+  ofxOscMessage message;
+  message.clear();
+  message.setAddress( "/Movement/Wind");
+  message.addFloatArg(value.x);
+  message.addFloatArg(value.y);
+  sender.sendMessage(message);
+}
+
+void MainGUI::toggleWindChanged(bool & value)
+{
+  ofxOscMessage message;
+  message.clear();
+  message.setAddress( "/Movement/Wind/ApplyWind");
+  message.addIntArg(value);
+  sender.sendMessage(message);
 }
 
 void MainGUI::enablePerlinChanged(bool & value)
@@ -650,11 +780,11 @@ void MainGUI::resetFlowChanged(bool & value)
 
 void MainGUI::followFlowChanged(bool & value)
 {
-  ofxOscMessage message;
-  message.clear();
-  message.setAddress( "/FollowFlow");
-  message.addIntArg(value);
-  sender.sendMessage(message);
+//  ofxOscMessage message;
+//  message.clear();
+//  message.setAddress( "/FollowFlow");
+//  message.addIntArg(value);
+//  sender.sendMessage(message);
 }
 
 void MainGUI::flowForceChanged(float & value)
@@ -693,55 +823,73 @@ void MainGUI::forcePerlinChanged(float & value)
 
 void MainGUI::particleSpeedChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Movement/Particle_Speed", value);
 }
 
 void MainGUI::sameSpringChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Movement/Same_Spring", value);
 }
 
 void MainGUI::sameFrictionChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Movement/Same_Friction", value);
 }
 
 void MainGUI::repulsionForceChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Movement/Repulsion_Force", value);
 }
 
 void MainGUI::minPerimeterChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Effect/Triangles/Min_Perimeter", value);
 }
 
 void MainGUI::maxPerimeterChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Effect/Triangles/Max_Perimeter", value);
 }
 
 void MainGUI::minLineDistanceChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Effect/Connect_Lines/Min_Line_Distance", value);
 }
 
 void MainGUI::maxLineDistanceChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Effect/Connect_Lines/Max_Line_Distance", value);
 }
 
 void MainGUI::scaleFactorChanged(float & value)
 {
+#ifdef USE_TIMELINE
   if(timeline.getIsPlaying())
+#endif
     sendFloatValue("/Effect/Scale_Factor", value);
 }
 

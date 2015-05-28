@@ -9,11 +9,14 @@
 #ifndef __APV_Controller__MainGUI__
 #define __APV_Controller__MainGUI__
 
-//#define FREE_DRAW_MODE
+#define FREE_DRAW_MODE
+//#define USE_TIMELINE
 
 #include "ofMain.h"
 #include "ofxGui.h"
-#include "ofxTimeline.h"
+#ifdef USE_TIMELINE
+  #include "ofxTimeline.h"
+#endif
 #include "ofxOscParameterSync.h"
 #include "ofxOsc.h"
 #include "ofxSvg.h"
@@ -24,13 +27,16 @@
 #include "PolyLineException.h"
 #include "GoofyFlowField.h"
 #include "GoofyPerlinNoise.h"
+#include<tr1/unordered_map>
 
 class MainGUI
 {
 public:
                       MainGUI();
   void                init();
+#ifdef USE_TIMELINE
   void                initTimeline();
+#endif
   void                initGeneralGUI();
   void                initGraphicGUI();
   void                initEffecGUI();
@@ -42,7 +48,9 @@ public:
   ofxPanel            effecGUI;
   ofxPanel            movementGUI;
   ofxPanel            shaderGUI;
+#ifdef USE_TIMELINE
   ofxTimeline         timeline;
+#endif
   void                draw();
   void                update();
   void                initEvents();
@@ -53,13 +61,17 @@ public:
   void                mouseReleased(ofMouseEventArgs &e);
   void                mousePressed(ofMouseEventArgs &e);
   bool                guiVisible;
+#ifdef USE_TIMELINE
   bool                timelineVisible;
+#endif
   void                sendSinglePoint(ofPoint* tempPoint);
   void                sendSinglePoint(float x, float y);
   void                addSinglePoint(int x, int y);
   void                keyReleased (ofKeyEventArgs &e);
   void                loadGeometric();
+#ifdef USE_TIMELINE
   void                togglePlayPauseTimelineChanged(bool & value);
+#endif
   void                toggleFullscreenChanged(bool& value);
   void                loadGeomChanged(bool & value);
   void                loadSvgChanged(bool & value);
@@ -78,10 +90,12 @@ public:
   void                audioInvertCoefficentChanged(float & value);
   void                scaleFactorChanged(float & value);
   void                sendFloatValue(string address, float value);
+#ifdef USE_TIMELINE
   void                playbackLoopedHandler(ofxTLPlaybackEventArgs& event);
   void                playbackStartedHandler(ofxTLPlaybackEventArgs& event);
   void                playbackEndedHandler(ofxTLPlaybackEventArgs& event);
   void                sendPlaybackState();
+#endif
   bool                canChangePoints;
   int                 timerCanChangePoints;
   
@@ -89,7 +103,9 @@ public:
   void                clearChanged();
   void                clearAllChanged();
   void                loadFromSVG(int id);
+#ifdef USE_TIMELINE
   void                receivedBang(ofxTLBangEventArgs& bang);
+#endif
   void                drawPoints();
   void                initOSC();
   void                sendGeometric();
@@ -111,21 +127,31 @@ public:
   ofxOscParameterSync syncEffecGUI;
   ofxOscParameterSync syncMovementGUI;
   ofxOscParameterSync syncShaderGUI;
+  ofParameterGroup*   windParams;
+  ofParameter<ofVec2f> wind;
+  ofParameter<bool>   toggleWind;
+  void                toggleWindChanged(bool & value);
+  void                windChanged(ofVec2f & value);
+  
+  ofParameterGroup*   getWindGroup();
 
   ofxOscSender        sender;
+  ofxOscReceiver      receiver;
 
   // generalGUI
   ofxLabel            visualIP;
   ofParameter<bool>   toggleFullscreen;
   ofxToggle           secureLimit;
   ofxLabel            visualFrameRate;
+#ifdef USE_TIMELINE
   ofParameter<bool>   togglePlayPauseTimeline;
+#endif
   ofParameter<float>  audioInvertCoefficent;
   
   ofParameterGroup    volumeGroup;
   ofParameter<bool>   manualInvert;
   ofParameter<bool>   forceInvert;
-  ofParameter<float>  volumeInvertLimit;
+  ofParameter<float>  volumeLevel;
   // graphicGUI
   ofxButton           bClear;
   ofxButton           clearAll;
@@ -181,7 +207,7 @@ public:
   void                speedPerlinChanged(float & value);
   void                forcePerlinChanged(float & value);
   
-  
+  void                cleanPointers();
   
   // shaderGUI
   ofParameterGroup    pixelShader;
@@ -191,6 +217,12 @@ public:
   ofParameter<float>  pixelSizeLimit;
   ofParameter<float>  pixelWidth;
   ofParameter<float>  pixelHeight;
+  
+  ofParameter<float>               oscRed;
+  ofParameter<float>               oscGreen;
+  ofParameter<float>               oscBlue;
+  
+  tr1::unordered_map<string, ofParameter<float>* > mapToFloatValue;
 };
 
 #endif /* defined(__APV_Controller__MainGUI__) */
