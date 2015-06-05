@@ -18,24 +18,29 @@ void MainGUI::init()
   canChangePoints       = true;
   timerCanChangePoints  = 0;
   readXMLSettings();
-  guiVisible = false;
+  guiVisible            = false;
 #ifdef USE_TIMELINE
   timelineVisible = true;
   initTimeline();
   guiPosY = timeline.getHeight()+10;
 #endif
-  initGeneralGUI();
-  initGraphicGUI();
-  initEffecGUI();
-  initMovementGUI();
-  initShaderGUI();
+  initGUI();
   initEvents();
   initOSC();
-  directDraw      = true;
-  drawProp = outputSize.x/outputSize.y;
+  directDraw            = true;
+  drawProp              = outputSize.x/outputSize.y;
   
   cleanPointers();
-  
+  setupOSCPointers();
+}
+
+void MainGUI::setupOSCPointers()
+{
+  setupMidiOSCPointers();
+}
+
+void MainGUI::setupMidiOSCPointers()
+{
   mapToFloatValue["/midi/cc16/1"] = &minPerimeter;
   mapToFloatValue["/midi/cc17/1"] = &maxPerimeter;
   mapToFloatValue["/midi/cc18/1"] = &triangleLimit;
@@ -47,7 +52,6 @@ void MainGUI::init()
   mapToFloatValue["/midi/cc22/1"] = &oscGreen;
   mapToFloatValue["/midi/cc23/1"] = &oscBlue;
   
-  
   mapToFloatValue["/midi/cc0/1"] = &particleSpeed;
   mapToFloatValue["/midi/cc1/1"] = &sameSpring;
   mapToFloatValue["/midi/cc2/1"] = &sameFriction;
@@ -56,9 +60,22 @@ void MainGUI::init()
   mapToFloatValue["/midi/cc7/1"] = &fakePerlin.force;
 }
 
+void MainGUI::initGUI()
+{
+  initGeneralGUI();
+  initGraphicGUI();
+  initEffecGUI();
+  initMovementGUI();
+  initShaderGUI();
+}
+
 void MainGUI::cleanPointers()
 {
-  
+  clearMidiPointers();
+}
+
+void MainGUI::clearMidiPointers()
+{
   mapToFloatValue["/midi/cc16/1"] = NULL;
   mapToFloatValue["/midi/cc17/1"] = NULL;
   mapToFloatValue["/midi/cc18/1"] = NULL;
@@ -92,7 +109,7 @@ void MainGUI::readXMLSettings()
 void MainGUI::initOSC()
 {
   sender.setup(host, port);
-  receiver.setup(6665);
+  receiver.setup(6668);
 }
 
 void MainGUI::draw()
@@ -120,12 +137,17 @@ void MainGUI::draw()
 #endif
   if(guiVisible)
   {
-    generalGUI.draw();
-    graphicGUI.draw();
-    effecGUI.draw();
-    movementGUI.draw();
-    shaderGUI.draw();
+    drawGUI();
   }
+}
+
+void MainGUI::drawGUI()
+{
+  generalGUI.draw();
+  graphicGUI.draw();
+  effecGUI.draw();
+  movementGUI.draw();
+  shaderGUI.draw();  
 }
 
 void MainGUI::drawPoints()
@@ -257,30 +279,34 @@ void MainGUI::sendSinglePoint(float x, float y)
     sender.sendMessage( m );
 }
 
+
+void MainGUI::processOSCMessage(ofxOscMessage& message)
+{
+  string messageAddress = message.getAddress();
+  if(messageAddress == "/framerate")
+  {
+    visualFrameRate = ofToString(message.getArgAsFloat(0));
+  }
+  
+  if(mapToFloatValue[messageAddress])
+  {
+    *mapToFloatValue[messageAddress] = message.getArgAsFloat(0);
+    if(messageAddress == "/midi/cc21/1" || messageAddress == "/midi/cc22/1" || messageAddress == "/midi/cc23/1")
+    {
+      ofColor newColor = ofColor(oscRed*255, oscGreen*255, oscBlue*255);
+      color = newColor;
+    }
+  }
+}
+
 void MainGUI::update()
 {
-  
-  
   while(receiver.hasWaitingMessages())
   {
     ofxOscMessage message;
     receiver.getNextMessage(&message);
-    string messageAddress = message.getAddress();
-    cout << messageAddress << endl;
-    if(messageAddress == "/framerate")
-    {
-      visualFrameRate = ofToString(message.getArgAsFloat(0));
-    }
-    
-    if(mapToFloatValue[messageAddress])
-    {
-      *mapToFloatValue[messageAddress] = message.getArgAsFloat(0);
-      if(messageAddress == "/midi/cc21/1" || messageAddress == "/midi/cc22/1" || messageAddress == "/midi/cc23/1")
-      {
-        ofColor newColor = ofColor(oscRed*255, oscGreen*255, oscBlue*255);
-        color = newColor;
-      }
-    }
+    cout << "RECEIVE" << endl;
+    processOSCMessage(message);
   }
   
 #ifdef USE_TIMELINE
@@ -614,7 +640,7 @@ void MainGUI::sendManyPoints()
   cont = -1;
   for(int a = 0; a < points.size(); a++)
   {
-    if(a%301 == 0 && a >= 0)
+    if(a%MAX_OSC_VALUES == 0 && a >= 0)
     {
       message.addFloatArg( points[a]->x  / outputSize.x );
       message.addFloatArg( points[a]->y  / outputSize.y );
@@ -624,8 +650,8 @@ void MainGUI::sendManyPoints()
       // Controllare che il load SVG non venga richiamto più volte
       message.setAddress( "/addPoint" );
       int pointToSend = (points.size() - a);
-      if(pointToSend >= 301)
-        pointToSend = 301;
+      if(pointToSend >= MAX_OSC_VALUES)
+        pointToSend = MAX_OSC_VALUES;
       message.addFloatArg(pointToSend);
       contPoint = 0;
     }
@@ -633,7 +659,7 @@ void MainGUI::sendManyPoints()
     message.addFloatArg( points[a]->y  / outputSize.y );
     contPoint++;
   }
-  if(points.size()%301 != 0)
+  if(points.size()%MAX_OSC_VALUES != 0)
   {
     sender.sendMessage( message );
   }

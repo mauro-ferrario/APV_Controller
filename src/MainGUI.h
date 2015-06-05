@@ -11,6 +11,7 @@
 
 #define FREE_DRAW_MODE
 //#define USE_TIMELINE
+#define MAX_OSC_VALUES 301
 
 #include "ofMain.h"
 #include "ofxGui.h"
@@ -37,6 +38,7 @@ public:
 #ifdef USE_TIMELINE
   void                initTimeline();
 #endif
+  virtual void        initGUI();
   void                initGeneralGUI();
   void                initGraphicGUI();
   void                initEffecGUI();
@@ -52,7 +54,7 @@ public:
   ofxTimeline         timeline;
 #endif
   void                draw();
-  void                update();
+  virtual void        update();
   void                initEvents();
   void                clear();
 #ifdef FREE_DRAW_MODE
@@ -106,8 +108,9 @@ public:
 #ifdef USE_TIMELINE
   void                receivedBang(ofxTLBangEventArgs& bang);
 #endif
+  virtual void        drawGUI();
   void                drawPoints();
-  void                initOSC();
+  virtual void                initOSC();
   void                sendGeometric();
   void                sendManyPoints();
   void                readXMLSettings();
@@ -208,6 +211,11 @@ public:
   void                forcePerlinChanged(float & value);
   
   void                cleanPointers();
+  void                clearMidiPointers();
+  void                setupOSCPointers();
+  void                setupMidiOSCPointers();
+  
+  virtual void        processOSCMessage(ofxOscMessage& message);
   
   // shaderGUI
   ofParameterGroup    pixelShader;
