@@ -178,8 +178,8 @@ void MainGUI::drawPoints()
 
 void MainGUI::loadFromSVG(int id)
 {
-//  if(!canChangePoints)
-  //  return;
+  if(freezeDrawAndClean)
+    return;
   if(addToDraw == 0)
     clear();
   PolyLineException* exception = new PolyLineException();
@@ -190,6 +190,8 @@ void MainGUI::loadFromSVG(int id)
 
 void MainGUI::loadGeometric()
 {
+  if(freezeDrawAndClean)
+    return;
   if(addToDraw == 0)
     clear();
   GeometricDraw::loadGeometric(this, geomId, geomParam1, geomParam2, outputSize);
@@ -210,12 +212,46 @@ void MainGUI::keyReleased (ofKeyEventArgs &e)
   char key = e.key;
   if(e.key == OF_KEY_UP)
     guiVisible = !guiVisible;
+  if(key == 's')
+    savePreset(preset);
+  if(key == 'l')
+    loadPreset(preset);
+  if(key == 'f')
+    ofToggleFullscreen();
 #ifdef USE_TIMELINE
   if(e.key == OF_KEY_DOWN)
     timelineVisible = !timelineVisible;
   if(e.key == ' ')
     timeline.togglePlay();
 #endif
+}
+
+void MainGUI::savePreset(int idPreset)
+{
+  freezeDrawAndClean = true;
+  bool prevDirectDraw;
+  prevDirectDraw = directDraw;
+  generalGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/generalGUI_"+ofToString(idPreset)+".xml");
+  graphicGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/graphicGUI_"+ofToString(idPreset)+".xml");
+  effecGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/effecGUI_"+ofToString(idPreset)+".xml");
+  movementGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/movementGUI_"+ofToString(idPreset)+".xml");
+  shaderGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/shaderGUI_"+ofToString(idPreset)+".xml");
+  directDraw = prevDirectDraw;
+  freezeDrawAndClean = false;
+}
+
+void MainGUI::loadPreset(int idPreset)
+{
+  freezeDrawAndClean = true;
+  bool prevDirectDraw;
+  prevDirectDraw = directDraw;
+  generalGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/generalGUI_"+ofToString(idPreset)+".xml");
+  graphicGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/graphicGUI_"+ofToString(idPreset)+".xml");
+  effecGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/effecGUI_"+ofToString(idPreset)+".xml");
+  movementGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/movementGUI_"+ofToString(idPreset)+".xml");
+  shaderGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/shaderGUI_"+ofToString(idPreset)+".xml");
+  directDraw = prevDirectDraw;
+  freezeDrawAndClean = false;
 }
 
 void MainGUI::mouseReleased(ofMouseEventArgs &e)
@@ -245,6 +281,7 @@ void MainGUI::mouseDragged(ofMouseEventArgs &e)
 
 void MainGUI::clear()
 {
+  cout << "CLEAN POINT " << freezeDrawAndClean << endl;
   int size = points.size();
   for(int a = 0; a < size; a++)
   {
@@ -497,8 +534,8 @@ void MainGUI::initGeneralGUI()
 {
   generalGUI.setup("General");
   generalGUI.setPosition(ofPoint(0,guiPosY));
+  generalGUI.add(preset.set("Preset", 0, 0, 100));
   generalGUI.add(visualIP.setup("Visual IP", ""));
-  generalGUI.add(toggleFullscreen.set("Fullscreen", true));
   generalGUI.add(secureLimit.setup("Secure Limit",true));
   generalGUI.add(visualFrameRate.setup("Visual Framerate",""));
 #ifdef USE_TIMELINE
@@ -510,7 +547,6 @@ void MainGUI::initGeneralGUI()
   volumeGroup.add(forceInvert.set("Force Invert", false));
   volumeGroup.add(volumeLevel.set("Volume Level", 1, 0, 5));
   generalGUI.add(volumeGroup);
-  toggleFullscreen.addListener(this, &MainGUI::toggleFullscreenChanged);
   audioInvertCoefficent.addListener(this, &MainGUI::audioInvertCoefficentChanged);
 #ifdef USE_TIMELINE
   togglePlayPauseTimeline.addListener(this, &MainGUI::togglePlayPauseTimelineChanged);
@@ -556,7 +592,7 @@ void MainGUI::audioInvertCoefficentChanged(float & value)
 
 void MainGUI::directDrawChanged(bool & value)
 {
-  if(value == 1)
+  if(value == 1 && !freezeDrawAndClean)
     sendManyPoints();
 }
 
@@ -567,6 +603,8 @@ void MainGUI::addToDrawChanged(bool & value)
 
 void MainGUI::loadSvgChanged(bool & value)
 {
+  if(freezeDrawAndClean)
+    return;
   loadVector = false;
   if(canChangePoints)
   {
@@ -599,12 +637,6 @@ void MainGUI::geomChanged(int & value)
     loadGeometric();
 }
 
-void MainGUI::toggleFullscreenChanged(bool & value)
-{
-  toggleFullscreen = false;
-  ofToggleFullscreen();
-}
-
 #ifdef USE_TIMELINE
 void MainGUI::togglePlayPauseTimelineChanged(bool & value)
 {
@@ -616,7 +648,8 @@ void MainGUI::togglePlayPauseTimelineChanged(bool & value)
 
 void MainGUI::clearChanged()
 {
-  clear();
+  if(!freezeDrawAndClean)
+    clear();
 }
 
 void MainGUI::sendGeometric()
@@ -668,11 +701,14 @@ void MainGUI::sendManyPoints()
 
 void MainGUI::clearAllChanged()
 {
-  clear();
-  ofxOscMessage message;
-  message.clear();
-  message.setAddress( "/clear" );
-  sender.sendMessage(message);
+  if(!freezeDrawAndClean)
+  {
+    clear();
+    ofxOscMessage message;
+    message.clear();
+    message.setAddress( "/clear" );
+    sender.sendMessage(message);
+  }
 }
 
 void MainGUI::initEffecGUI()
@@ -740,6 +776,7 @@ void MainGUI::initMovementGUI()
   repulsionForce.addListener(this, &MainGUI::repulsionForceChanged);
   syncMovementGUI.setup((ofParameterGroup&)movementGUI.getParameter(),6663,host,port);
   fakeFlowField.bResetFlow.addListener(this, &MainGUI::resetFlowChanged);
+//  fakeFlowField.resolution.addListener(this.&MainGUI::changeFlowResolution);
   fakeFlowField.force.addListener(this, &MainGUI::flowForceChanged);
   followFlow.addListener(this, &MainGUI::followFlowChanged);
   enablePerlin.addListener(this, &MainGUI::enablePerlinChanged);
@@ -749,6 +786,11 @@ void MainGUI::initMovementGUI()
   fakePerlin.speed.addListener(this, &MainGUI::speedPerlinChanged);
   fakePerlin.force.addListener(this, &MainGUI::forcePerlinChanged);
 }
+
+//void MainGUI::changeFlowResolution(float & value)
+//{
+//  
+//}
 
 ofParameterGroup* MainGUI::getWindGroup()
 {

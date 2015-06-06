@@ -70,11 +70,12 @@ public:
   void                sendSinglePoint(float x, float y);
   void                addSinglePoint(int x, int y);
   void                keyReleased (ofKeyEventArgs &e);
+  virtual void        savePreset(int idPreset);
+  virtual void        loadPreset(int idPreset);
   void                loadGeometric();
 #ifdef USE_TIMELINE
   void                togglePlayPauseTimelineChanged(bool & value);
 #endif
-  void                toggleFullscreenChanged(bool& value);
   void                loadGeomChanged(bool & value);
   void                loadSvgChanged(bool & value);
   void                vectorChanged(int & value);
@@ -143,7 +144,7 @@ public:
 
   // generalGUI
   ofxLabel            visualIP;
-  ofParameter<bool>   toggleFullscreen;
+  ofParameter<int>    preset;
   ofxToggle           secureLimit;
   ofxLabel            visualFrameRate;
 #ifdef USE_TIMELINE
@@ -201,6 +202,7 @@ public:
   void                resetFlowChanged(bool & value);
   void                flowForceChanged(float & value);
   void                followFlowChanged(bool & value);
+//  void                changeFlowResolution(float & value);
   
   GoofyPerlinNoise    fakePerlin;
   ofParameter<bool>   enablePerlin;
@@ -231,6 +233,8 @@ public:
   ofParameter<float>               oscBlue;
   
   tr1::unordered_map<string, ofParameter<float>* > mapToFloatValue;
+  
+  bool                freezeDrawAndClean;
 };
 
 #endif /* defined(__APV_Controller__MainGUI__) */
