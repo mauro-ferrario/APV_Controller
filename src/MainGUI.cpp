@@ -683,7 +683,7 @@ void MainGUI::initEffecGUI()
   effecGUI.add(drawTriangle.setup("Draw triangle", false));
   effecGUI.add(connectPrevPoint.setup("Connect to prev point", false));
   effecGUI.add(connectPoints.setup("Connect points", false));
-  effecGUI.add(scaleFactor.set("Scale Factor", 0, 0, 1));
+  effecGUI.add(scaleFactor.set("Scale Factor", 0.24, 0, 1));
   triangleGroup.setName("Triangles");
   triangleGroup.add(sameColorTriangle.set("Same Color Triangles", true));
   triangleGroup.add(minPerimeter.set("Min Perimeter", 0, 0, 1));
@@ -724,10 +724,10 @@ void MainGUI::initMovementGUI()
   fakeFlowField.init(100, 100, 10);
   movementGUI.setup("Movement");
   movementGUI.setPosition(ofPoint(630,guiPosY));
-  movementGUI.add(particleSpeed.set("Particle Speed", 0, 0, 1));
-  movementGUI.add(sameSpring.set("Same Spring",0,0,1));
-  movementGUI.add(sameFriction.set("Same Friction", 0, 0, 1));
-  movementGUI.add(repulsionForce.set("Repulsion Force", 0, 0, 1));
+  movementGUI.add(particleSpeed.set("Particle Speed", 0.63, 0, 1));
+  movementGUI.add(sameSpring.set("Same Spring",0.26,0,1));
+  movementGUI.add(sameFriction.set("Same Friction", 0.17, 0, 1));
+  movementGUI.add(repulsionForce.set("Repulsion Force", 0.135, 0, 1));
   movementGUI.add(repulsionFromTarget.set("Repulsion From Target", false));
   movementGUI.add(followFlow.set("Follow Flow", false));
   movementGUI.add(enablePerlin.set("Enable Perlin", false));
@@ -759,7 +759,7 @@ ofParameterGroup* MainGUI::getWindGroup()
   if(windParams->getName() == "")
   {
     windParams->setName("Wind");
-    windParams->add(wind.set("Wind",ofVec2f(0,0),ofVec2f(-50,-50),ofVec2f(50,50)));
+    windParams->add(wind.set("Wind",ofVec2f(0,-10),ofVec2f(-50,-50),ofVec2f(50,50)));
     windParams->add(toggleWind.set("Wind actived", false));
     toggleWind.addListener(this, &MainGUI::toggleWindChanged);
     wind.addListener(this, &MainGUI::windChanged);
