@@ -71,7 +71,9 @@ public:
   void                addSinglePoint(int x, int y);
   void                keyReleased (ofKeyEventArgs &e);
   virtual void        savePreset(int idPreset);
+  virtual void        saveGUIsPreset(int idPreset);
   virtual void        loadPreset(int idPreset);
+  virtual void        loadGUIsPreset(int idPreset);
   void                loadGeometric();
 #ifdef USE_TIMELINE
   void                togglePlayPauseTimelineChanged(bool & value);
@@ -202,7 +204,6 @@ public:
   void                resetFlowChanged(bool & value);
   void                flowForceChanged(float & value);
   void                followFlowChanged(bool & value);
-//  void                changeFlowResolution(float & value);
   
   GoofyPerlinNoise    fakePerlin;
   ofParameter<bool>   enablePerlin;

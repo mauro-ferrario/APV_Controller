@@ -231,13 +231,18 @@ void MainGUI::savePreset(int idPreset)
   freezeDrawAndClean = true;
   bool prevDirectDraw;
   prevDirectDraw = directDraw;
+  saveGUIsPreset(idPreset);
+  directDraw = prevDirectDraw;
+  freezeDrawAndClean = false;
+}
+
+void MainGUI::saveGUIsPreset(int idPreset)
+{
   generalGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/generalGUI_"+ofToString(idPreset)+".xml");
   graphicGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/graphicGUI_"+ofToString(idPreset)+".xml");
   effecGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/effecGUI_"+ofToString(idPreset)+".xml");
   movementGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/movementGUI_"+ofToString(idPreset)+".xml");
   shaderGUI.saveToFile("guiPreset/"+ofToString(idPreset)+"/shaderGUI_"+ofToString(idPreset)+".xml");
-  directDraw = prevDirectDraw;
-  freezeDrawAndClean = false;
 }
 
 void MainGUI::loadPreset(int idPreset)
@@ -245,13 +250,18 @@ void MainGUI::loadPreset(int idPreset)
   freezeDrawAndClean = true;
   bool prevDirectDraw;
   prevDirectDraw = directDraw;
+  loadGUIsPreset(idPreset);
+  directDraw = prevDirectDraw;
+  freezeDrawAndClean = false;
+}
+
+void MainGUI::loadGUIsPreset(int idPreset)
+{
   generalGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/generalGUI_"+ofToString(idPreset)+".xml");
   graphicGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/graphicGUI_"+ofToString(idPreset)+".xml");
   effecGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/effecGUI_"+ofToString(idPreset)+".xml");
   movementGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/movementGUI_"+ofToString(idPreset)+".xml");
   shaderGUI.loadFromFile("guiPreset/"+ofToString(idPreset)+"/shaderGUI_"+ofToString(idPreset)+".xml");
-  directDraw = prevDirectDraw;
-  freezeDrawAndClean = false;
 }
 
 void MainGUI::mouseReleased(ofMouseEventArgs &e)
@@ -776,7 +786,6 @@ void MainGUI::initMovementGUI()
   repulsionForce.addListener(this, &MainGUI::repulsionForceChanged);
   syncMovementGUI.setup((ofParameterGroup&)movementGUI.getParameter(),6663,host,port);
   fakeFlowField.bResetFlow.addListener(this, &MainGUI::resetFlowChanged);
-//  fakeFlowField.resolution.addListener(this.&MainGUI::changeFlowResolution);
   fakeFlowField.force.addListener(this, &MainGUI::flowForceChanged);
   followFlow.addListener(this, &MainGUI::followFlowChanged);
   enablePerlin.addListener(this, &MainGUI::enablePerlinChanged);
@@ -786,11 +795,6 @@ void MainGUI::initMovementGUI()
   fakePerlin.speed.addListener(this, &MainGUI::speedPerlinChanged);
   fakePerlin.force.addListener(this, &MainGUI::forcePerlinChanged);
 }
-
-//void MainGUI::changeFlowResolution(float & value)
-//{
-//  
-//}
 
 ofParameterGroup* MainGUI::getWindGroup()
 {
