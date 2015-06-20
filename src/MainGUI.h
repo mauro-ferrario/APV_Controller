@@ -66,8 +66,8 @@ public:
 #ifdef USE_TIMELINE
   bool                timelineVisible;
 #endif
-  void                sendSinglePoint(ofPoint* tempPoint);
-  void                sendSinglePoint(float x, float y);
+  virtual void        sendSinglePoint(ofPoint* tempPoint);
+  virtual void        sendSinglePoint(float x, float y);
   void                addSinglePoint(int x, int y);
   void                keyReleased (ofKeyEventArgs &e);
   virtual void        savePreset(int idPreset);
