@@ -547,7 +547,7 @@ void MainGUI::initGeneralGUI()
   generalGUI.add(preset.set("Preset", 0, 0, 100));
   generalGUI.add(visualIP.setup("Visual IP", ""));
   generalGUI.add(secureLimit.setup("Secure Limit",true));
-  generalGUI.add(visualFrameRate.setup("Visual Framerate",""));
+//  generalGUI.add(visualFrameRate.setup("Visual Framerate",""));
 #ifdef USE_TIMELINE
   generalGUI.add(togglePlayPauseTimeline.set("Play/Pause Timeline",false));
 #endif
@@ -973,7 +973,7 @@ void MainGUI::initShaderGUI()
   pixelShader.add(pixelEffect.set("Pixel Effect", false));
   pixelShader.add(halfPixelEffect.set("Half Pixel Effect", false));
   pixelShader.add(samePixelSize.set("Same Pixel Size", false));
-  pixelShader.add(pixelSizeLimit.set("Pixel Size Limit", 0, 0, 1));
+//  pixelShader.add(pixelSizeLimit.set("Pixel Size Limit", 0, 0, 1));
   pixelShader.add(pixelWidth.set("Pixel Width",0,0,1));
   pixelShader.add(pixelHeight.set("Pixel Height", 0, 0, 1));
   shaderGUI.add(pixelShader);
