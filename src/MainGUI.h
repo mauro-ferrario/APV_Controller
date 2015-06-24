@@ -95,6 +95,7 @@ public:
   void                audioInvertCoefficentChanged(float & value);
   void                scaleFactorChanged(float & value);
   void                sendFloatValue(string address, float value);
+  void                sendBoolValue(string address, bool value);
 #ifdef USE_TIMELINE
   void                playbackLoopedHandler(ofxTLPlaybackEventArgs& event);
   void                playbackStartedHandler(ofxTLPlaybackEventArgs& event);
@@ -223,6 +224,7 @@ public:
   // shaderGUI
   ofParameterGroup    pixelShader;
   ofParameter<bool>   pixelEffect;
+  ofParameter<bool>   allLine;
   ofParameter<bool>   halfPixelEffect;
   ofParameter<bool>   samePixelSize;
   ofParameter<float>  pixelSizeLimit;

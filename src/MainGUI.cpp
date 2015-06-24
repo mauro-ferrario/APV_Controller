@@ -352,7 +352,6 @@ void MainGUI::update()
   {
     ofxOscMessage message;
     receiver.getNextMessage(&message);
-    cout << "RECEIVE" << endl;
     processOSCMessage(message);
   }
   
@@ -873,6 +872,14 @@ void MainGUI::sendFloatValue(string address, float value)
   sender.sendMessage(message);
 }
 
+void MainGUI::sendBoolValue(string address, bool value)
+{
+  ofxOscMessage message;
+  message.setAddress(address);
+  message.addIntArg(value);
+  sender.sendMessage(message);
+}
+
 void MainGUI::resXPerlinChanged(float & value)
 {
   sendFloatValue("/Movement/Perlin/ResX", value);
@@ -973,6 +980,7 @@ void MainGUI::initShaderGUI()
   pixelShader.add(pixelEffect.set("Pixel Effect", false));
   pixelShader.add(halfPixelEffect.set("Half Pixel Effect", false));
   pixelShader.add(samePixelSize.set("Same Pixel Size", false));
+  pixelShader.add(allLine.set("All line", false));
 //  pixelShader.add(pixelSizeLimit.set("Pixel Size Limit", 0, 0, 1));
   pixelShader.add(pixelWidth.set("Pixel Width",0,0,1));
   pixelShader.add(pixelHeight.set("Pixel Height", 0, 0, 1));
