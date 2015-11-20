@@ -267,6 +267,10 @@ void MainGUI::loadPreset(int idPreset)
   loadGUIsPreset(idPreset);
   directDraw = prevDirectDraw;
   freezeDrawAndClean = false;
+  if(bClearAfdterPreset)
+    clear();
+  if(clearAllAfterPreset)
+    clearAllChanged();
   if(loadGeomAfterPreset)
     loadGeometric();
   if(loadVectorAfterPreset)
@@ -625,7 +629,9 @@ void MainGUI::initGraphicGUI()
   graphicGUI.add(
     */             
   graphicGUI.add(bClear.setup("Clear"));
+  graphicGUI.add(bClearAfdterPreset.set("Clear After Preset", false));
   graphicGUI.add(clearAll.setup("Clear All"));
+  graphicGUI.add(clearAllAfterPreset.set("Clear All After Preset", false));
   vectorGroup.setName("Vector");
   vectorGroup.add(loadVector.set("Load vector", false));
   vectorGroup.add(loadVectorAfterPreset.set("Load vector after preset", false));

@@ -165,7 +165,9 @@ public:
   ofParameter<float>  volumeLevel;
   // graphicGUI
   ofxButton           bClear;
+  ofParameter<bool>   bClearAfdterPreset;
   ofxButton           clearAll;
+  ofParameter<bool>   clearAllAfterPreset;
   ofxToggle           directDraw;
   ofxToggle           addToDraw;
 
