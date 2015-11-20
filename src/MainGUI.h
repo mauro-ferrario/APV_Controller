@@ -171,10 +171,12 @@ public:
 
   ofParameterGroup    vectorGroup;
   ofParameter<bool>   loadVector;
+  ofParameter<bool>   loadVectorAfterPreset;
   ofParameter<int>    vectorId;
 
   ofParameterGroup    geomGroup;
   ofParameter<bool>   loadGeom;
+  ofParameter<bool>   loadGeomAfterPreset;
   ofParameter<int>    geomId;
   ofParameter<float>  geomParam1;
   ofParameter<float>  geomParam2;

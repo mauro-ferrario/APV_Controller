@@ -261,13 +261,16 @@ void MainGUI::saveGUIsPreset(int idPreset)
 
 void MainGUI::loadPreset(int idPreset)
 {
-  cout << "LOAD PRESET = " << idPreset << endl;
   freezeDrawAndClean = true;
   bool prevDirectDraw;
   prevDirectDraw = directDraw;
   loadGUIsPreset(idPreset);
   directDraw = prevDirectDraw;
   freezeDrawAndClean = false;
+  if(loadGeomAfterPreset)
+    loadGeometric();
+  if(loadVectorAfterPreset)
+    loadFromSVG(vectorId);
 }
 
 void MainGUI::loadGUIsPreset(int idPreset)
@@ -625,10 +628,12 @@ void MainGUI::initGraphicGUI()
   graphicGUI.add(clearAll.setup("Clear All"));
   vectorGroup.setName("Vector");
   vectorGroup.add(loadVector.set("Load vector", false));
+  vectorGroup.add(loadVectorAfterPreset.set("Load vector after preset", false));
   vectorGroup.add(vectorId.set("Vector id", 0, 0, VectorDraw::getTotSvgs("svg/")-1));
   graphicGUI.add(vectorGroup);
   geomGroup.setName("Geom");
   geomGroup.add(loadGeom.set("Load geom", false));
+  geomGroup.add(loadGeomAfterPreset.set("Load geom after preset", false));
   geomGroup.add(geomId.set("Geom id", 0, 0, 4));
   geomGroup.add(geomParam1.set("Geom param 1",0,0,1));
   geomGroup.add(geomParam2.set("Geom param 2", 0, 0, 1));
