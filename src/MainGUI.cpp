@@ -18,7 +18,7 @@ void MainGUI::init()
   canChangePoints       = true;
   timerCanChangePoints  = 0;
   readXMLSettings();
-  guiVisible            = false;
+  guiVisible            = true;
 #ifdef USE_TIMELINE
   timelineVisible = true;
   initTimeline();
@@ -56,7 +56,8 @@ void MainGUI::setupMidiOSCPointers()
   mapToFloatValue["/midi/cc1/1"] = &sameSpring;
   mapToFloatValue["/midi/cc2/1"] = &sameFriction;
   mapToFloatValue["/midi/cc3/1"] = &repulsionForce;
-  mapToFloatValue["/midi/cc6/1"] = &fakeFlowField.force;
+  mapToFloatValue["/midi/cc5/1"] = &fakeFlowField.force;
+  mapToFloatValue["/midi/cc6/1"] = &fakePerlin.speed;
   mapToFloatValue["/midi/cc7/1"] = &fakePerlin.force;
 }
 
@@ -92,6 +93,7 @@ void MainGUI::clearMidiPointers()
   mapToFloatValue["/midi/cc2/1"] = NULL;
   mapToFloatValue["/midi/cc3/1"] = NULL;
   
+  mapToFloatValue["/midi/cc5/1"] = NULL;
   mapToFloatValue["/midi/cc6/1"] = NULL;
   mapToFloatValue["/midi/cc7/1"] = NULL;
 }
@@ -226,6 +228,18 @@ void MainGUI::keyReleased (ofKeyEventArgs &e)
 #endif
 }
 
+void MainGUI::moveToNextPreset()
+{
+  preset = ofClamp(preset+1, 0, preset.getMax());
+  loadPreset(preset);
+}
+
+void MainGUI::moveToPrevPreset()
+{
+  preset = ofClamp(preset-1, 0, preset.getMax());
+  loadPreset(preset);
+}
+
 void MainGUI::savePreset(int idPreset)
 {
   freezeDrawAndClean = true;
@@ -247,6 +261,7 @@ void MainGUI::saveGUIsPreset(int idPreset)
 
 void MainGUI::loadPreset(int idPreset)
 {
+  cout << "LOAD PRESET = " << idPreset << endl;
   freezeDrawAndClean = true;
   bool prevDirectDraw;
   prevDirectDraw = directDraw;
@@ -334,9 +349,26 @@ void MainGUI::processOSCMessage(ofxOscMessage& message)
   {
     visualFrameRate = ofToString(message.getArgAsFloat(0));
   }
+  if(messageAddress == "/midi/cc43/1")
+  {
+    if(message.getArgAsInt32(0)==0)
+    {
+      moveToPrevPreset();
+    }
+  }
+  if(messageAddress == "/midi/cc44/1")
+  {
+    if(message.getArgAsInt32(0)==0)
+    {
+      moveToNextPreset();
+    }
+  }
   if(mapToFloatValue[messageAddress])
   {
     *mapToFloatValue[messageAddress] = message.getArgAsFloat(0);
+    if(messageAddress == "/midi/cc6/1")
+      *mapToFloatValue[messageAddress] = ofMap(message.getArgAsFloat(0), 0, 1, 0,.1);
+    
     if(messageAddress == "/midi/cc21/1" || messageAddress == "/midi/cc22/1" || messageAddress == "/midi/cc23/1")
     {
       ofColor newColor = ofColor(oscRed*255, oscGreen*255, oscBlue*255);

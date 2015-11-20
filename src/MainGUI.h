@@ -74,6 +74,8 @@ public:
   virtual void        saveGUIsPreset(int idPreset);
   virtual void        loadPreset(int idPreset);
   virtual void        loadGUIsPreset(int idPreset);
+  void                moveToNextPreset();
+  void                moveToPrevPreset();
   void                loadGeometric();
 #ifdef USE_TIMELINE
   void                togglePlayPauseTimelineChanged(bool & value);
