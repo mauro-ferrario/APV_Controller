@@ -136,6 +136,8 @@ public:
   ofxOscParameterSync syncShaderGUI;
   ofParameterGroup*   windParams;
   ofParameter<ofVec2f> wind;
+  ofParameter<bool>   windXNoise;
+  ofParameter<bool>   windYNoise;
   ofParameter<bool>   toggleWind;
   void                toggleWindChanged(bool & value);
   void                windChanged(ofVec2f & value);
@@ -192,6 +194,7 @@ public:
   ofParameterGroup    connectLinesGroup;
   ofParameter<float>  minLineDistance;
   ofParameter<float>  maxLineDistance;
+  ofParameter<float>  lineAlpha;
   
   // movementGUI
   ofParameter<float>  particleSpeed;

@@ -334,7 +334,6 @@ void MainGUI::processOSCMessage(ofxOscMessage& message)
   {
     visualFrameRate = ofToString(message.getArgAsFloat(0));
   }
-  
   if(mapToFloatValue[messageAddress])
   {
     *mapToFloatValue[messageAddress] = message.getArgAsFloat(0);
@@ -378,6 +377,22 @@ void MainGUI::update()
     maxLineDistance = timeline.getValue("Max Line Distance");
   }
 #endif
+  
+  if(windXNoise||windYNoise)
+  {
+    float fWindXNoise = wind->x;
+    float fWindYNoise = wind->y;
+    if(windXNoise)
+    {
+      fWindXNoise = (ofSignedNoise(sin(ofGetFrameNum()*.005)) * 8);
+    }
+    if(windYNoise)
+    {
+      fWindYNoise = ofNoise(ofGetFrameNum());
+    }
+    wind = ofVec2f(fWindXNoise,fWindYNoise);
+  }
+  
   syncGeneralGUI.update();
   //syncGraphiclGUI.update();
   syncEffecGUI.update();
@@ -569,6 +584,11 @@ void MainGUI::initGraphicGUI()
   graphicGUI.setPosition(ofPoint(210,guiPosY));
   graphicGUI.add(directDraw.setup("Direct draw", true));
   graphicGUI.add(addToDraw.setup("Add to draw", false));
+  /*
+  graphicGUI.add(rotationSpeed.setup("Rotation speed", 0, 0, 1));
+  graphicGUI.add(clockwiseRotation.setup("Clockwise rotation", true));
+  graphicGUI.add(
+    */             
   graphicGUI.add(bClear.setup("Clear"));
   graphicGUI.add(clearAll.setup("Clear All"));
   vectorGroup.setName("Vector");
@@ -739,12 +759,15 @@ void MainGUI::initEffecGUI()
   connectLinesGroup.setName("Connect Lines");
   connectLinesGroup.add(minLineDistance.set("Min Line Distance", 0, 0, 1));
   connectLinesGroup.add(maxLineDistance.set("Max Line Distance",0,0,1));
+  connectLinesGroup.add(lineAlpha.set("Line Alpha", 200, 0,255));
   effecGUI.add(connectLinesGroup);
   color.addListener(this, &MainGUI::colorChanged);
   minPerimeter.addListener(this, &MainGUI::minPerimeterChanged);
   maxPerimeter.addListener(this, &MainGUI::maxPerimeterChanged);
   minLineDistance.addListener(this, &MainGUI::minLineDistanceChanged);
   maxLineDistance.addListener(this, &MainGUI::maxLineDistanceChanged);
+  
+  
   scaleFactor.addListener(this, &MainGUI::scaleFactorChanged);
   syncEffecGUI.setup((ofParameterGroup&)effecGUI.getParameter(),6662, host,port);
 }
@@ -806,6 +829,8 @@ ofParameterGroup* MainGUI::getWindGroup()
     windParams->setName("Wind");
     windParams->add(wind.set("Wind",ofVec2f(0,-10),ofVec2f(-50,-50),ofVec2f(50,50)));
     windParams->add(toggleWind.set("Wind actived", false));
+    windParams->add(windXNoise.set("Wind x noise", false));
+    windParams->add(windYNoise.set("Wind y noise", false));
     toggleWind.addListener(this, &MainGUI::toggleWindChanged);
     wind.addListener(this, &MainGUI::windChanged);
   }
