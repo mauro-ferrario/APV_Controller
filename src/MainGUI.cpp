@@ -352,6 +352,7 @@ void MainGUI::sendSinglePoint(float x, float y)
 void MainGUI::processOSCMessage(ofxOscMessage& message)
 {
   string messageAddress = message.getAddress();
+  cout << messageAddress << endl;
   if(messageAddress == "/framerate")
   {
     visualFrameRate = ofToString(message.getArgAsFloat(0));
@@ -361,6 +362,13 @@ void MainGUI::processOSCMessage(ofxOscMessage& message)
     if(message.getArgAsInt32(0)==0)
     {
       moveToPrevPreset();
+    }
+  }
+  if(messageAddress == "/midi/cc60/1")
+  {
+    if(message.getArgAsInt32(0)==0)
+    {
+      savePreset(preset);
     }
   }
   if(messageAddress == "/midi/cc44/1")
